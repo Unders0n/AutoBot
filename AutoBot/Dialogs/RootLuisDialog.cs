@@ -3,33 +3,46 @@ using System.Threading;
 using System.Threading.Tasks;
 using BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Luis;
+using Microsoft.Bot.Builder.Luis.Models;
 using Microsoft.Bot.Connector;
 
 namespace AutoBot.Dialogs
 {
     [Serializable]
-    public class RootDialog : IDialog<object>
+    [LuisModel("e602ed8f-2174-45c0-bc30-f09e84712e70", "35f95c56928740d5b7ba97185473188e", LuisApiVersion.V2)]
+    public class RootLuisDialog : LuisDialog<IMessageActivity>
     {
+        private WelcomeAndRegisterCarDialog welcomeAndRegisterDialog;
 
-        private  WelcomeAndRegisterCarDialog welcomeAndRegisterDialog;
-
-        public Task StartAsync(IDialogContext context)
+        public RootLuisDialog()
         {
             welcomeAndRegisterDialog = new WelcomeAndRegisterCarDialog();
-
-            context.Wait(MessageReceivedAsync);
-
-            return Task.CompletedTask;
+          
         }
 
-        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
+        [LuisIntent("CarService")]
+        public async Task CarService(IDialogContext context, LuisResult result)
         {
-            var activity = await result as Activity;
+            //test
+            // await context.PostAsync(Messages.Default.NothingToDoNowMessages.GetRandomString());
+        }
+
+        [LuisIntent("")]
+        public async Task Nothing(IDialogContext context, LuisResult result)
+        {
+           // await context.PostAsync(Messages.Default.NothingToDoNowMessages.GetRandomString());
+        }
+
+        [LuisIntent("None")]
+        public async Task None(IDialogContext context, LuisResult result)
+        {
+            var activity = context.Activity as IMessageActivity;
 
             //1st time
             if (activity.Text.Contains("/start"))
             {
-                
+
                 await context.Forward(new ExceptionHandlerDialog<object>(welcomeAndRegisterDialog, true),
                    AfterWelcomeAndRegisterDialog,
                    "",
@@ -37,7 +50,7 @@ namespace AutoBot.Dialogs
                 return;
             }
 
-            context.Wait(MessageReceivedAsync);
+           // context.Wait(MessageReceivedAsync);
         }
 
         private async Task AfterWelcomeAndRegisterDialog(IDialogContext context, IAwaitable<object> result)
@@ -49,7 +62,7 @@ namespace AutoBot.Dialogs
 
         private async Task ShowMenu(IDialogContext context)
         {
-            //test
+
         }
     }
 }

@@ -1,7 +1,10 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using AutoBot.Dialogs;
+using BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 
@@ -10,6 +13,13 @@ namespace AutoBot
     [BotAuthentication]
     public class MessagesController : ApiController
     {
+        private RootLuisDialog _rootLuisDialog;
+
+        public MessagesController()
+        {
+            _rootLuisDialog = new RootLuisDialog();
+        }
+
         /// <summary>
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
@@ -18,7 +28,21 @@ namespace AutoBot
         {
             if (activity.Type == ActivityTypes.Message)
             {
-                await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+                if (activity.Text.Trim() == "reset")
+                {
+                    var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                    Activity rep;
+
+
+                    rep = activity.CreateReply("Временные данные успешно удалены");
+                    await connector.Conversations.ReplyToActivityAsync(rep);
+                    activity.GetStateClient().BotState.DeleteStateForUser(activity.ChannelId, activity.From.Id);
+                    return new HttpResponseMessage(HttpStatusCode.Accepted);
+                }
+                await Conversation.SendAsync(activity,
+                            () => new ExceptionHandlerDialog<object>(_rootLuisDialog, true));
+                return new HttpResponseMessage(HttpStatusCode.Accepted);
+                // await Conversation.SendAsync(activity, () => new Dialogs.RootLuisDialog());
             }
             else
             {
