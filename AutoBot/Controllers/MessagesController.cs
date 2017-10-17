@@ -4,8 +4,11 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using AutoBot.Dialogs;
+using Autofac;
 using BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Internals;
+using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
 
 namespace AutoBot
@@ -15,9 +18,16 @@ namespace AutoBot
     {
         private RootLuisDialog _rootLuisDialog;
 
+        private readonly ILifetimeScope scope;
+
         public MessagesController()
         {
-            _rootLuisDialog = new RootLuisDialog();
+           // _rootLuisDialog = new RootLuisDialog();
+        }
+
+        public MessagesController(ILifetimeScope scope)
+        {
+            SetField.NotNull(out this.scope, nameof(scope), scope);
         }
 
         /// <summary>
@@ -26,6 +36,12 @@ namespace AutoBot
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
+            using (var scope = DialogModule.BeginLifetimeScope(this.scope, activity))
+            {
+                _rootLuisDialog = scope.Resolve<RootLuisDialog>();
+            }
+
+
             if (activity.Type == ActivityTypes.Message)
             {
                 if (activity.Text.Trim() == "reset")

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Builder.Luis;
 using Microsoft.Bot.Builder.Luis.Models;
 using Microsoft.Bot.Connector;
@@ -13,12 +14,13 @@ namespace AutoBot.Dialogs
     [LuisModel("e602ed8f-2174-45c0-bc30-f09e84712e70", "35f95c56928740d5b7ba97185473188e", LuisApiVersion.V2)]
     public class RootLuisDialog : LuisDialog<IMessageActivity>
     {
-        private WelcomeAndRegisterCarDialog welcomeAndRegisterDialog;
+        private WelcomeAndRegisterCarDialog _welcomeAndRegisterCarDialog;
 
-        public RootLuisDialog()
+        public RootLuisDialog(WelcomeAndRegisterCarDialog welcomeAndRegisterCarDialog)
         {
-            welcomeAndRegisterDialog = new WelcomeAndRegisterCarDialog();
-          
+            SetField.NotNull(out _welcomeAndRegisterCarDialog, nameof(_welcomeAndRegisterCarDialog), welcomeAndRegisterCarDialog);
+            //   welcomeAndRegisterDialog = new WelcomeAndRegisterCarDialog();
+
         }
 
         [LuisIntent("CarService")]
@@ -43,7 +45,7 @@ namespace AutoBot.Dialogs
             if (activity.Text.Contains("/start"))
             {
 
-                await context.Forward(new ExceptionHandlerDialog<object>(welcomeAndRegisterDialog, true),
+                await context.Forward(new ExceptionHandlerDialog<object>(_welcomeAndRegisterCarDialog, true),
                    AfterWelcomeAndRegisterDialog,
                    "",
                    CancellationToken.None);
