@@ -131,7 +131,7 @@ namespace AutoBot.Dialogs
 
             var txt = res.Text;
 
-            if (txt == "опатить все")
+            if (txt == "оплатить все")
             {
                 shtrafsWantToPay = shtrafsAll;
                 PromptDialog.Text(context, ResumeAfterShtrafs, "введите фамилию плательщика");
