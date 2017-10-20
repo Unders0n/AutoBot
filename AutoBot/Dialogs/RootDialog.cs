@@ -12,11 +12,12 @@ namespace AutoBot.Dialogs
     {
 
         private  WelcomeAndRegisterCarDialog welcomeAndRegisterDialog;
+        private CheckShtrafDialog checkShtrafDialog;
 
         public Task StartAsync(IDialogContext context)
         {
-            welcomeAndRegisterDialog = new WelcomeAndRegisterCarDialog();
-
+          //  welcomeAndRegisterDialog = new WelcomeAndRegisterCarDialog();
+            checkShtrafDialog = new CheckShtrafDialog();
             context.Wait(MessageReceivedAsync);
 
             return Task.CompletedTask;
@@ -30,7 +31,7 @@ namespace AutoBot.Dialogs
             if (activity.Text.Contains("/start"))
             {
                 
-                await context.Forward(new ExceptionHandlerDialog<object>(welcomeAndRegisterDialog, true),
+                await context.Forward(new ExceptionHandlerDialog<object>(checkShtrafDialog, true),
                    AfterWelcomeAndRegisterDialog,
                    "",
                    CancellationToken.None);
@@ -42,8 +43,9 @@ namespace AutoBot.Dialogs
 
         private async Task AfterWelcomeAndRegisterDialog(IDialogContext context, IAwaitable<object> result)
         {
-            await context.PostAsync("Отлично. Теперь можно воспользоваться нашими бесплатными сервисами, например введите 'ТО' чтобы получить информацию о последующем техническом обслуживании");
-            await ShowMenu(context);
+            context.Done(1);
+          /*  await context.PostAsync("Отлично. Теперь можно воспользоваться нашими бесплатными сервисами, например введите 'ТО' чтобы получить информацию о последующем техническом обслуживании");
+            await ShowMenu(context);*/
             //  throw new NotImplementedException();
         }
 

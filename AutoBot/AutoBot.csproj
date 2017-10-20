@@ -121,6 +121,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Dialogs\RootLuisDialog.cs" />
+    <Compile Include="Dialogs\CheckShtrafDialog.cs" />
     <Compile Include="Dialogs\WelcomeAndRegisterCarDialog.cs" />
     <Compile Include="Dialogs\RootDialog.cs" />
     <Compile Include="Global.asax.cs">
@@ -144,6 +145,10 @@
     <ProjectReference Include="..\..\..\..\Source\Repos\flow-core\flow-core\BotExtensions\BotExtensions.csproj">
       <Project>{DD0E4DEC-DBF5-4D85-9295-CCABD14941F1}</Project>
       <Name>BotExtensions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ShrafiBiz\ShrafiBiz.csproj">
+      <Project>{d527c4dd-1dbd-495c-a534-90748f89a376}</Project>
+      <Name>ShrafiBiz</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

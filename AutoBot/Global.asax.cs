@@ -24,7 +24,9 @@ namespace AutoBot
 
             var builder = new ContainerBuilder();
 
+            //register dialogs
             builder.RegisterType<RootLuisDialog>().AsSelf().InstancePerDependency();
+            builder.RegisterType<RootDialog>().AsSelf().InstancePerDependency();
             builder.RegisterType<WelcomeAndRegisterCarDialog>().AsSelf().InstancePerDependency();
 
 

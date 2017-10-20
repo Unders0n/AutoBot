@@ -17,6 +17,7 @@ namespace AutoBot
     public class MessagesController : ApiController
     {
         private RootLuisDialog _rootLuisDialog;
+        private RootDialog _rootDialog;
 
         private readonly ILifetimeScope scope;
 
@@ -39,33 +40,38 @@ namespace AutoBot
             using (var scope = DialogModule.BeginLifetimeScope(this.scope, activity))
             {
                 _rootLuisDialog = scope.Resolve<RootLuisDialog>();
-            }
+                _rootDialog = scope.Resolve<RootDialog>();
 
 
-            if (activity.Type == ActivityTypes.Message)
-            {
-                if (activity.Text.Trim() == "reset")
+                if (activity.Type == ActivityTypes.Message)
                 {
-                    var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                    Activity rep;
+                    if (activity.Text.Trim() == "reset")
+                    {
+                        var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                        Activity rep;
 
 
-                    rep = activity.CreateReply("Временные данные успешно удалены");
-                    await connector.Conversations.ReplyToActivityAsync(rep);
-                    activity.GetStateClient().BotState.DeleteStateForUser(activity.ChannelId, activity.From.Id);
+                        rep = activity.CreateReply("Временные данные успешно удалены");
+                        await connector.Conversations.ReplyToActivityAsync(rep);
+                        activity.GetStateClient().BotState.DeleteStateForUser(activity.ChannelId, activity.From.Id);
+                        return new HttpResponseMessage(HttpStatusCode.Accepted);
+                    }
+                    //ignore luis now
+                    await Conversation.SendAsync(activity,
+                        () => new ExceptionHandlerDialog<object>(_rootDialog, true));
+
+                    /* await Conversation.SendAsync(activity,
+                         () => new ExceptionHandlerDialog<object>(_rootLuisDialog, true));*/
                     return new HttpResponseMessage(HttpStatusCode.Accepted);
+                    // await Conversation.SendAsync(activity, () => new Dialogs.RootLuisDialog());
                 }
-                await Conversation.SendAsync(activity,
-                            () => new ExceptionHandlerDialog<object>(_rootLuisDialog, true));
-                return new HttpResponseMessage(HttpStatusCode.Accepted);
-                // await Conversation.SendAsync(activity, () => new Dialogs.RootLuisDialog());
+                else
+                {
+                    HandleSystemMessage(activity);
+                }
+                var response = Request.CreateResponse(HttpStatusCode.OK);
+                return response;
             }
-            else
-            {
-                HandleSystemMessage(activity);
-            }
-            var response = Request.CreateResponse(HttpStatusCode.OK);
-            return response;
         }
 
         private Activity HandleSystemMessage(Activity message)
