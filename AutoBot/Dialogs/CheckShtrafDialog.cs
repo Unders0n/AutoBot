@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using ShrafiBiz.Client;
@@ -14,17 +15,17 @@ namespace AutoBot.Dialogs
     {
         private const int MAX_RETRIES = 3;
 
-        public string sts;
-        public string vu;
-        public CheckPayResponse pays;
-        public string name;
-        public string surname;
-
         public int connectTries;
+        public string name;
+        public CheckPayResponse pays;
 
 
         public Dictionary<string, Pay> shtrafsAll;
         public Dictionary<string, Pay> shtrafsWantToPay = new Dictionary<string, Pay>();
+
+        public string sts;
+        public string surname;
+        public string vu;
 
         public Task StartAsync(IDialogContext context)
         {
@@ -35,24 +36,49 @@ namespace AutoBot.Dialogs
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
-            await context.PostAsync($"Чтобы проверить штрафы введите СТС");
+            await context.PostAsync($"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС");
             context.Wait(ResumeAfterStsEntered);
-
         }
 
         private async Task ResumeAfterStsEntered(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
             var txt = await result;
             sts = txt.Text;
-            await context.PostAsync($"Введите ВУ");
+            //  await context.PostAsync($"Введите номер водительского удостоверения. (Шаг можно пропустить, хотя наличие ВУ повышает шанс на поиск штрафа)");
+
+            /*var mes = context.MakeMessage();
+            mes.Text =
+                "Введите номер водительского удостоверения. (Шаг можно пропустить, хотя наличие ВУ повышает шанс на поиск штрафа)";
+            var buttonPay = new CardAction
+            {
+                //  Value = "test",
+                Value = $"пропустить",
+                Type = "imBack",
+                Title = "пропустить"
+            };
+
+
+            var cardForButton = new ThumbnailCard {Buttons = new List<CardAction> {buttonPay}};
+            mes.Attachments.Add(cardForButton.ToAttachment());
+
+            await context.PostAsync(mes);*/
+            var buttonPay = new CardAction
+            {
+                //  Value = "test",
+                Value = $"пропустить",
+                Type = "imBack",
+                Title = "пропустить"
+            };
+            await context.PostWithButtonsAsync("Введите номер водительского удостоверения. (Шаг можно пропустить, хотя наличие ВУ повышает шанс на поиск штрафа)", new List<CardAction>(){buttonPay});
+
+
+
             context.Wait(ResumeAfterVuEntered);
             //todo: car recognition by vin or make\model
-
         }
 
         private async Task TryCheckPay(IDialogContext context, ShtrafBizClient shtrafiCLient)
         {
-            
             pays = shtrafiCLient.CheckPay(sts, vu);
 
             //нет штрафов
@@ -60,6 +86,7 @@ namespace AutoBot.Dialogs
             {
                 await context.PostAsync("Начисления не найдены.");
                 context.Done(1);
+                return;
             }
             //проблемы с сервисом, ретраим
             else if (pays.Err == -1)
@@ -71,18 +98,23 @@ namespace AutoBot.Dialogs
                 }
                 else
                 {
-                    await context.PostAsync("Превышено кол-во попыток связи с сервером. Попробуйте воспользоваться позже. Приносим извинения за неудобства.");
+                    await context.PostAsync(
+                        "Превышено кол-во попыток связи с сервером. Попробуйте воспользоваться позже. Приносим извинения за неудобства.");
                     context.Done(1);
-                }   
+                }
             }
             else if (pays.Err == 0)
             {
                 shtrafsAll = pays.L;
-                int i = 1;
+                var i = 1;
                 foreach (var pay in pays.L)
-                {
-                    await context.PostAsync($"{i++}: {pay.Value.ToString()}");
-                }
+                    await context.PostAsync($"{i++}: {pay.Value}");
+
+                var totalSumm = pays.L.Sum(pair => Int16.Parse(pair.Value.Sum));
+                var totalSummFeesrv = pays.L.Sum(pair => pair.Value.Feesrv);
+                await context.PostAsync(
+                    $"Всего **{pays.L.Count}** штрафов на общую сумму **{totalSumm}**р (+ {totalSummFeesrv}р комиссия)");
+
             }
 
 
@@ -92,7 +124,7 @@ namespace AutoBot.Dialogs
             // context.Done(1);
 
             var mes = context.MakeMessage();
-            mes.Text = string.Format("введите номера штрафов разделяя пробелами или нажмите **оплатить все**");
+            mes.Text = "введите номера штрафов, разделяя пробелами, или нажмите **оплатить все**";
             var buttonPay = new CardAction
             {
                 //  Value = "test",
@@ -102,29 +134,27 @@ namespace AutoBot.Dialogs
             };
 
 
-            var cardForButton = new ThumbnailCard { Buttons = new List<CardAction> { buttonPay } };
+            var cardForButton = new ThumbnailCard {Buttons = new List<CardAction> {buttonPay}};
             mes.Attachments.Add(cardForButton.ToAttachment());
 
             await context.PostAsync(mes);
-            context.Wait(Resume);
+            context.Wait(AfterSelectShtrafsToPay);
         }
 
         private async Task ResumeAfterVuEntered(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
-
             var txt = await result;
-            vu = txt.Text;
+            if (txt.Text == "пропустить")
+                vu = "";
+            else
+                vu = txt.Text;
+
             var shtrafiCLient = new ShtrafBizClient();
 
             await TryCheckPay(context, shtrafiCLient);
-
-
-
-
-
         }
 
-        private async Task Resume(IDialogContext context, IAwaitable<object> result)
+        private async Task AfterSelectShtrafsToPay(IDialogContext context, IAwaitable<object> result)
         {
             var resu = await result;
             var res = resu as Activity;
@@ -134,25 +164,28 @@ namespace AutoBot.Dialogs
             if (txt == "оплатить все")
             {
                 shtrafsWantToPay = shtrafsAll;
-                PromptDialog.Text(context, ResumeAfterShtrafs, "введите фамилию плательщика");
             }
             else
             {
                 var shtrafIdsToPay = txt.Split(' ').Select(int.Parse);
                 foreach (var id in shtrafIdsToPay)
-                {
-                    shtrafsWantToPay.Add(shtrafsAll.AsEnumerable().ToList()[id-1].Key, shtrafsAll.AsEnumerable().ToList()[id-1].Value);
-                }
-                PromptDialog.Text(context, ResumeAfterShtrafs, "введите фамилию плательщика");
+                    shtrafsWantToPay.Add(shtrafsAll.AsEnumerable().ToList()[id - 1].Key,
+                        shtrafsAll.AsEnumerable().ToList()[id - 1].Value);
                 //shtrafsAll
             }
+
+            var totalSumm = shtrafsWantToPay.Sum(pair => Int16.Parse(pair.Value.Sum));
+            var totalSummFeesrv = shtrafsWantToPay.Sum(pair => pair.Value.Feesrv);
+
+            await context.PostAsync(
+                $"Выбрано штрафов: **{shtrafsWantToPay.Count}**, на общую сумму **{totalSumm + totalSummFeesrv}**р (из них комиссия {totalSummFeesrv}р) ");
+            PromptDialog.Text(context, ResumeAfterShtrafs, "введите фамилию плательщика");
         }
 
         private async Task ResumeAfterShtrafs(IDialogContext context, IAwaitable<string> result)
         {
             surname = await result;
             PromptDialog.Text(context, ResumeAfterSurname, "введите имя плательщика");
-           
         }
 
         private async Task ResumeAfterSurname(IDialogContext context, IAwaitable<string> result)
@@ -162,8 +195,33 @@ namespace AutoBot.Dialogs
             var resp = shtrafiCLient.CreateZkz(shtrafsWantToPay, sts, vu, surname, name);
             if (resp?.Err != -1)
             {
-                await context.PostAsync($"Для оплаты перейдите по ссылке: {resp.Urlpay}");
+                var buttonPay = new CardAction
+                {
+                    //  Value = "test",
+                    Value = resp.Urlpay,
+                    Type = "openUrl",
+                    Title = "Оплатить"
+                };
+                await context.PostWithButtonsAsync($"оплата {shtrafsWantToPay.Count} штрафов",
+                    new List<CardAction>() {buttonPay});
+                await context.PostAsync($"Нажимая кнопку «Оплатить» вы принимаете условия Соглашения об использовании сервиса: https://shtraf.biz/doc_sogl.pdf");
+                // await context.PostAsync($"Для оплаты перейдите по ссылке: {resp.Urlpay}");
+
             }
+            else
+            {
+                await context.PostAsync($"При оплате произошла ошибка. Мы уже в курсе. Приносим свои извинения. Повторите поиск.");
+            }
+
+            context.Done(1);
+            /*var button = new CardAction
+            {
+                //  Value = "test",
+                Value = $"искать ещё",
+                Type = "imBack",
+                Title = "искать ещё"
+            };
+            await context.PostWithButtonsAsync("", new List<CardAction>() {button});*/
         }
     }
 }

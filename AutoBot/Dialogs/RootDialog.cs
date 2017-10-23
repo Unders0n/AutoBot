@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BotExtensions.DialogExtensions;
@@ -28,7 +29,7 @@ namespace AutoBot.Dialogs
             var activity = await result as Activity;
 
             //1st time
-            if (activity.Text.Contains("/start"))
+            if (activity.Text.Contains("/start") || activity.Text.Contains("искать ещё"))
             {
                 
                 await context.Forward(new ExceptionHandlerDialog<object>(checkShtrafDialog, true),
@@ -43,9 +44,18 @@ namespace AutoBot.Dialogs
 
         private async Task AfterWelcomeAndRegisterDialog(IDialogContext context, IAwaitable<object> result)
         {
-            context.Done(1);
-          /*  await context.PostAsync("Отлично. Теперь можно воспользоваться нашими бесплатными сервисами, например введите 'ТО' чтобы получить информацию о последующем техническом обслуживании");
-            await ShowMenu(context);*/
+            //  context.Done(1);
+            var button = new CardAction
+            {
+                //  Value = "test",
+                Value = $"искать ещё",
+                Type = "imBack",
+                Title = "искать ещё"
+            };
+            await context.PostWithButtonsAsync("доступные опции:", new List<CardAction>() { button });
+            context.Wait(MessageReceivedAsync);
+            /*  await context.PostAsync("Отлично. Теперь можно воспользоваться нашими бесплатными сервисами, например введите 'ТО' чтобы получить информацию о последующем техническом обслуживании");
+              await ShowMenu(context);*/
             //  throw new NotImplementedException();
         }
 
