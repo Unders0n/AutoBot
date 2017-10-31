@@ -52,6 +52,8 @@
     <Compile Include="AutoBotContext.cs" />
     <Compile Include="Entities\CarInGarage.cs" />
     <Compile Include="Entities\CarModel.cs" />
+    <Compile Include="Entities\Fines\DocumentSetToCheck.cs" />
+    <Compile Include="Entities\Fines\FinesLog.cs" />
     <Compile Include="Entities\User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
