@@ -13,7 +13,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AutoBot</RootNamespace>
     <AssemblyName>Bot Application</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
@@ -52,6 +52,12 @@
     <Reference Include="Chronic, Version=0.3.2.0, Culture=neutral, PublicKeyToken=3bd1f1ef638b0d3c, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)\packages\Chronic.Signed.0.3.2\lib\net40\Chronic.dll</HintPath>
     </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Bot.Builder, Version=3.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bot.Builder.3.9.0.0\lib\net46\Microsoft.Bot.Builder.dll</HintPath>
     </Reference>
@@ -78,6 +84,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Source\Repos\flow-core\flow-core\packages\NLog.4.4.11\lib\net45\NLog.dll</HintPath>
     </Reference>
+    <Reference Include="StepApp.BotExtensions">
+      <HintPath>..\..\..\..\..\Source\Repos\StepAppLibs\StepAppLibs\StepApp.BotExtensions\bin\Release\StepApp.BotExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="StepApp.CommonExtensions">
+      <HintPath>..\..\..\..\..\Source\Repos\StepAppLibs\StepAppLibs\StepApp.BotExtensions\bin\Release\StepApp.CommonExtensions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.IdentityModel.Tokens.Jwt, Version=4.0.40306.1554, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)\packages\System.IdentityModel.Tokens.Jwt.4.0.4.403061554\lib\net45\System.IdentityModel.Tokens.Jwt.dll</HintPath>
@@ -95,9 +107,9 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
     </Reference>
@@ -129,6 +141,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\UserService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config">
@@ -143,13 +156,17 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Source\Repos\flow-core\flow-core\BotExtensions\BotExtensions.csproj">
-      <Project>{DD0E4DEC-DBF5-4D85-9295-CCABD14941F1}</Project>
-      <Name>BotExtensions</Name>
+    <ProjectReference Include="..\Model\Model.csproj">
+      <Project>{1ed24db9-d981-4bff-a711-675343600918}</Project>
+      <Name>Model</Name>
     </ProjectReference>
     <ProjectReference Include="..\ShrafiBiz\ShrafiBiz.csproj">
       <Project>{d527c4dd-1dbd-495c-a534-90748f89a376}</Project>
       <Name>ShrafiBiz</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ShtrafiBLL\ShtrafiBLL.csproj">
+      <Project>{21E84895-FE32-48DF-BE71-2AE8DB41601E}</Project>
+      <Name>ShtrafiBLL</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

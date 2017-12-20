@@ -31,10 +31,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -55,14 +55,54 @@
     <Compile Include="Entities\Fines\DocumentSetToCheck.cs" />
     <Compile Include="Entities\Fines\FinesLog.cs" />
     <Compile Include="Entities\User.cs" />
+    <Compile Include="Migrations\201710311427291_initialDb.cs" />
+    <Compile Include="Migrations\201710311427291_initialDb.Designer.cs">
+      <DependentUpon>201710311427291_initialDb.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201710311439125_addFinesLogTable.cs" />
+    <Compile Include="Migrations\201710311439125_addFinesLogTable.Designer.cs">
+      <DependentUpon>201710311439125_addFinesLogTable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201712111851319_addFieldsToUser.cs" />
+    <Compile Include="Migrations\201712111851319_addFieldsToUser.Designer.cs">
+      <DependentUpon>201712111851319_addFieldsToUser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201712200845206_DocsSetToCheckUpdateFieldLastCheck.cs" />
+    <Compile Include="Migrations\201712200845206_DocsSetToCheckUpdateFieldLastCheck.Designer.cs">
+      <DependentUpon>201712200845206_DocsSetToCheckUpdateFieldLastCheck.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201712201443596_RemoveUserIdWithDomain.cs" />
+    <Compile Include="Migrations\201712201443596_RemoveUserIdWithDomain.Designer.cs">
+      <DependentUpon>201712201443596_RemoveUserIdWithDomain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201710311427291_initialDb.resx">
+      <DependentUpon>201710311427291_initialDb.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201710311439125_addFinesLogTable.resx">
+      <DependentUpon>201710311439125_addFinesLogTable.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201712111851319_addFieldsToUser.resx">
+      <DependentUpon>201712111851319_addFieldsToUser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201712200845206_DocsSetToCheckUpdateFieldLastCheck.resx">
+      <DependentUpon>201712200845206_DocsSetToCheckUpdateFieldLastCheck.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201712201443596_RemoveUserIdWithDomain.resx">
+      <DependentUpon>201712201443596_RemoveUserIdWithDomain.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

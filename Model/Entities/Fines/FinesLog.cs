@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Model.Entities.Fines
 {
     //some summaries to log events
-    class FinesLog
+    public class FinesLog
     {
         [Key]
         public string Key { get; set; }

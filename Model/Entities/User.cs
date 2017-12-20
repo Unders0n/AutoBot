@@ -16,9 +16,10 @@ namespace Model.Entities
         [Key]
         public int Id { get; set; }
 
-        //use like email for external services not to show real email. Usually using id+@mydomain.com
-        [Index(IsUnique = true)]
-        public int IdWithDomain { get; set; }
+        //use like email for external services not to show real email. Usually using id.messenger@mydomain.com
+      /* temporarily disable cos doesnt need callbacks
+       * [Index(IsUnique = true)]
+        public int IdWithDomain { get; set; }*/
         public DateTime RegistrationDate { get; set; }
         public string UserIdTelegramm { get; set; }
         public string UserIdSkype { get; set; }
@@ -31,6 +32,10 @@ namespace Model.Entities
 
         public string Surname { get; set; }
 
-        public List<DocumentSetToCheck> DocumentsToChecks { get; set; }
+        public string PayName { get; set; }
+
+        public string PaySurname { get; set; }
+
+        public virtual List<DocumentSetToCheck> DocumentSetsTocheck { get; set; }
     }
 }

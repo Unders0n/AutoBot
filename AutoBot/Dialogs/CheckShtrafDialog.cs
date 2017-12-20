@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BotExtensions.DialogExtensions;
+using StepApp.BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
+using Model.Entities;
 using ShrafiBiz.Client;
 using ShrafiBiz.Model;
+using ShtrafiBLL;
 
 namespace AutoBot.Dialogs
 {
@@ -26,6 +29,18 @@ namespace AutoBot.Dialogs
         public string sts;
         public string surname;
         public string vu;
+        private IShtrafiUserService _shtrafiUserService;
+        private User user;
+
+        public CheckShtrafDialog(IShtrafiUserService shtrafiUserService)
+        {
+            SetField.NotNull(out _shtrafiUserService, nameof(_shtrafiUserService), shtrafiUserService);
+        }
+
+       /* public CheckShtrafDialog()
+        {
+
+        }*/
 
         public Task StartAsync(IDialogContext context)
         {
@@ -36,6 +51,13 @@ namespace AutoBot.Dialogs
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
+            if (_shtrafiUserService.GetUserByMessengerId(context.Activity.From.Name) == null)
+            {
+                _shtrafiUserService.RegisterUserAfterFirstPay(context.Activity.From.Name, "test name", "test surname",
+                "123345", "567678");
+            }
+            
+            return;
             await context.PostAsync($"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС");
             context.Wait(ResumeAfterStsEntered);
         }
@@ -207,6 +229,9 @@ namespace AutoBot.Dialogs
                 await context.PostAsync($"Нажимая кнопку «Оплатить» вы принимаете условия Соглашения об использовании сервиса: https://shtraf.biz/doc_sogl.pdf");
                 // await context.PostAsync($"Для оплаты перейдите по ссылке: {resp.Urlpay}");
 
+                //todo: abstract out of telegram id
+                CheckUserRegisterAndSubscribe(context);
+
             }
             else
             {
@@ -222,6 +247,84 @@ namespace AutoBot.Dialogs
                 Title = "искать ещё"
             };
             await context.PostWithButtonsAsync("", new List<CardAction>() {button});*/
+        }
+
+        private async void CheckUserRegisterAndSubscribe(IDialogContext context)
+        {
+            var username = context.Activity.From.Name;
+
+            user = _shtrafiUserService.GetUserByMessengerId(context.Activity.From.Name);
+            if (user == null)
+            {
+                var registeredUser = _shtrafiUserService.RegisterUserAfterFirstPay(username, name, surname, sts, vu);
+
+                var buttonOk = new CardAction
+                {
+                    //  Value = "test",
+                    Value = "оставить",
+                    Type = "imBack",
+                    Title = "оставить"
+                };
+                var buttonCancel = new CardAction
+                {
+                    //  Value = "test",
+                    Value = "отменить",
+                    Type = "imBack",
+                    Title = "отменить подписку"
+                };
+                var buttonNew = new CardAction
+                {
+                    //  Value = "test",
+                    Value = "новый",
+                    Type = "imBack",
+                    Title = "новый поиск"
+                };
+                await context.PostWithButtonsAsync(
+                    "Кстати, мы подписали вас на уведомления о новых штрафах. Сообщение будет приходить только если новый штраф найден. Но вы можете отменить подписку, если хотите.", new List<CardAction>(){buttonOk, buttonCancel, buttonNew });
+
+                context.Wait(ResumeAfterSubscription);
+            }
+            else
+            {
+                if (user.DocumentSetsTocheck.FirstOrDefault(check => check.Sts == sts) == null)
+                {
+                    PromptDialog.Confirm(context, ResumeAfterAskToSaveSubscribtion,
+                        "Сохранить подписку на новые штрафы для этого набора документов?");
+                }
+                
+            }
+        }
+
+        private async Task ResumeAfterAskToSaveSubscribtion(IDialogContext context, IAwaitable<bool> result)
+        {
+            if (await result)
+            {
+                string name = "";
+                PromptDialog.Text(context, async (dialogContext, awaitable) => name = await awaitable, "дайте имя этому набору документов , например \"машина Мамы\"");
+                if (_shtrafiUserService.RegisterDocumentSetToCheck(user, sts, vu, name) != null)
+                {
+                    
+                }
+                else
+                {
+                    await context.PostAsync("При создании подписки произошла ошибка. Попробуйте снова.");
+                    await ResumeAfterAskToSaveSubscribtion(context, new AwaitableFromItem<bool>(true));
+                }
+            }
+        }
+
+        private async Task ResumeAfterSubscription(IDialogContext context, IAwaitable<IMessageActivity> result)
+        {
+            var res = await result;
+            if (res.Text == "отменить")
+            {
+                //todo: add cancelling of subscription
+            }
+            if (res.Text == "новый")
+            {
+                context.Done(1);
+                //todo: add cancelling of subscription
+            }
         }
     }
 }

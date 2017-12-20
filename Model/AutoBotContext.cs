@@ -1,4 +1,5 @@
 using Model.Entities;
+using Model.Entities.Fines;
 
 namespace Model
 {
@@ -17,6 +18,7 @@ namespace Model
         public AutoBotContext()
             : base("name=AutoBotContext")
         {
+            
         }
 
         // Add a DbSet for each entity type that you want to include in your model. For more information 
@@ -24,6 +26,11 @@ namespace Model
 
         // public virtual DbSet<MyEntity> MyEntities { get; set; }
         public virtual DbSet<User> Users { get; set; }
+        public virtual DbSet<DocumentSetToCheck> DocumentSetsTocheck { get; set; }
+
+        public virtual DbSet<FinesLog> FinesLogs { get; set; }
+
+        
     }
 
     //public class MyEntity

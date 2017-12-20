@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using BotExtensions.DialogExtensions;
+using StepApp.BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
+using ShtrafiBLL;
 
 namespace AutoBot.Dialogs
 {
@@ -13,12 +15,17 @@ namespace AutoBot.Dialogs
     {
 
         private  WelcomeAndRegisterCarDialog welcomeAndRegisterDialog;
-        private CheckShtrafDialog checkShtrafDialog;
+        private CheckShtrafDialog _checkShtrafDialog;
+
+         public RootDialog(CheckShtrafDialog checkShtrafDialog)
+        {
+            SetField.NotNull(out _checkShtrafDialog, nameof(_checkShtrafDialog), checkShtrafDialog);
+        }
 
         public Task StartAsync(IDialogContext context)
         {
           //  welcomeAndRegisterDialog = new WelcomeAndRegisterCarDialog();
-            checkShtrafDialog = new CheckShtrafDialog();
+           // checkShtrafDialog = new CheckShtrafDialog();
             context.Wait(MessageReceivedAsync);
 
             return Task.CompletedTask;
@@ -32,7 +39,7 @@ namespace AutoBot.Dialogs
             if (activity.Text.Contains("/start") || activity.Text.Contains("искать ещё"))
             {
                 
-                await context.Forward(new ExceptionHandlerDialog<object>(checkShtrafDialog, true),
+                await context.Forward(new ExceptionHandlerDialog<object>(_checkShtrafDialog, true),
                    AfterWelcomeAndRegisterDialog,
                    "",
                    CancellationToken.None);

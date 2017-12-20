@@ -52,6 +52,7 @@
     <Compile Include="Model\CheckPayResponse.cs" />
     <Compile Include="Model\CreateZkzResponse.cs" />
     <Compile Include="Model\GenericCheckPayResponse.cs" />
+    <Compile Include="Model\PayNotificationCallbackResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

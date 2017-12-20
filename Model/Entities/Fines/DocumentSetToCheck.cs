@@ -12,11 +12,12 @@ namespace Model.Entities.Fines
         [Key]
         public int Id { get; set; }
 
+        //name of a set for example "mom's car"
         public string Name { get; set; }
 
         public bool ScheduleCheck { get; set; }
 
-        public DateTime ScheduleLastTimeOfCheck { get; set; }
+        public DateTime? ScheduleLastTimeOfCheck { get; set; }
         //certificate of car registration
         public string Sts { get; set; }
         //driver licence

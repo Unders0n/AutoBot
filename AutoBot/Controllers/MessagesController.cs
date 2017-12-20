@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using AutoBot.Dialogs;
 using Autofac;
-using BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
+using NLog;
+using StepApp.BotExtensions.DialogExtensions;
+using StepApp.CommonExtensions.Logger;
 
 namespace AutoBot
 {
@@ -20,6 +22,8 @@ namespace AutoBot
         private RootDialog _rootDialog;
 
         private readonly ILifetimeScope scope;
+
+        private ILoggerService<ILogger> _loggerService;
 
         public MessagesController()
         {
@@ -37,41 +41,51 @@ namespace AutoBot
         /// </summary>
         public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
-            using (var scope = DialogModule.BeginLifetimeScope(this.scope, activity))
+            try
             {
-                _rootLuisDialog = scope.Resolve<RootLuisDialog>();
-                _rootDialog = scope.Resolve<RootDialog>();
-
-
-                if (activity.Type == ActivityTypes.Message)
+                using (var scope = DialogModule.BeginLifetimeScope(this.scope, activity))
                 {
-                    if (activity.Text.Trim() == "reset")
+                    _loggerService = scope.Resolve<ILoggerService<ILogger>>();
+                    _rootLuisDialog = scope.Resolve<RootLuisDialog>();
+                    _rootDialog = scope.Resolve<RootDialog>();
+                   
+
+                    if (activity.Type == ActivityTypes.Message)
                     {
-                        var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                        Activity rep;
+                        if (activity.Text.Trim() == "reset")
+                        {
+                            var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                            Activity rep;
 
 
-                        rep = activity.CreateReply("Временные данные успешно удалены");
-                        await connector.Conversations.ReplyToActivityAsync(rep);
-                        activity.GetStateClient().BotState.DeleteStateForUser(activity.ChannelId, activity.From.Id);
+                            rep = activity.CreateReply("Временные данные успешно удалены");
+                            await connector.Conversations.ReplyToActivityAsync(rep);
+                            activity.GetStateClient().BotState.DeleteStateForUser(activity.ChannelId, activity.From.Id);
+                            return new HttpResponseMessage(HttpStatusCode.Accepted);
+                        }
+                        //ignore luis now
+                        await Conversation.SendAsync(activity,
+                            () => new ExceptionHandlerDialog<object>(_rootDialog, true));
+
+                        /* await Conversation.SendAsync(activity,
+                             () => new ExceptionHandlerDialog<object>(_rootLuisDialog, true));*/
                         return new HttpResponseMessage(HttpStatusCode.Accepted);
+                        // await Conversation.SendAsync(activity, () => new Dialogs.RootLuisDialog());
                     }
-                    //ignore luis now
-                    await Conversation.SendAsync(activity,
-                        () => new ExceptionHandlerDialog<object>(_rootDialog, true));
-
-                    /* await Conversation.SendAsync(activity,
-                         () => new ExceptionHandlerDialog<object>(_rootLuisDialog, true));*/
-                    return new HttpResponseMessage(HttpStatusCode.Accepted);
-                    // await Conversation.SendAsync(activity, () => new Dialogs.RootLuisDialog());
+                    else
+                    {
+                        HandleSystemMessage(activity);
+                    }
+                    var response = Request.CreateResponse(HttpStatusCode.OK);
+                    return response;
                 }
-                else
-                {
-                    HandleSystemMessage(activity);
-                }
-                var response = Request.CreateResponse(HttpStatusCode.OK);
-                return response;
             }
+            catch (Exception e)
+            {
+                _loggerService.Error(e);
+                throw;
+            }
+            
         }
 
         private Activity HandleSystemMessage(Activity message)
