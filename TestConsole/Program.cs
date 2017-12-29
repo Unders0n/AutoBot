@@ -119,6 +119,12 @@ namespace TestConsole
                 if (usr == null) registeredUser = bll.RegisterUserAfterFirstPay(userTelegrammId, "имя", "фамилия", sts, "");
                 Console.WriteLine($"User registered, id is {registeredUser.Id}");
 
+                Console.WriteLine("нажмите любую кнопку чтоб отменить подписку");
+
+                bll.ToggleDocumentSetForSubscription(registeredUser.DocumentSetsTocheck.FirstOrDefault(), false);
+
+                Console.ReadLine();
+
                 /* var cont = resp.Content;
  
                  var pays = JsonConvert.DeserializeObject<CheckPayResponse>(cont);*/

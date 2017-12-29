@@ -88,5 +88,12 @@ namespace ShtrafiBLL
         {
             return _autoBotContext.Users.Include(user => user.DocumentSetsTocheck).FirstOrDefault(user => user.Id == id);
         }
+
+        public void ToggleDocumentSetForSubscription(DocumentSetToCheck documentSetToCheck, bool SubscriptionToggle)
+        {
+            var docSetInDb = _autoBotContext.DocumentSetsTocheck.Find(documentSetToCheck.Id);
+            if (docSetInDb != null) docSetInDb.ScheduleCheck = SubscriptionToggle;
+            _autoBotContext.SaveChanges();
+        }
     }
 }
