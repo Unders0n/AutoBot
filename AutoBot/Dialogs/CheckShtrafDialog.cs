@@ -51,13 +51,6 @@ namespace AutoBot.Dialogs
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
-            if (_shtrafiUserService.GetUserByMessengerId(context.Activity.From.Name) == null)
-            {
-                _shtrafiUserService.RegisterUserAfterFirstPay(context.Activity.From.Name, "test name", "test surname",
-                "123345", "567678");
-            }
-            
-            return;
             await context.PostAsync($"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС");
             context.Wait(ResumeAfterStsEntered);
         }
@@ -107,7 +100,8 @@ namespace AutoBot.Dialogs
             if (pays.Err == -4)
             {
                 await context.PostAsync("Начисления не найдены.");
-                context.Done(1);
+                CheckUserRegisterAndSubscribe(context);
+               // context.Done(1);
                 return;
             }
             //проблемы с сервисом, ретраим
@@ -251,12 +245,12 @@ namespace AutoBot.Dialogs
 
         private async void CheckUserRegisterAndSubscribe(IDialogContext context)
         {
-            var username = context.Activity.From.Name;
+            var userId = context.Activity.From.Id;
 
             user = _shtrafiUserService.GetUserByMessengerId(context.Activity.From.Name);
             if (user == null)
             {
-                var registeredUser = _shtrafiUserService.RegisterUserAfterFirstPay(username, name, surname, sts, vu);
+                var registeredUser = _shtrafiUserService.RegisterUserAfterFirstPay(userId, name, surname, sts, vu);
 
                 var buttonOk = new CardAction
                 {

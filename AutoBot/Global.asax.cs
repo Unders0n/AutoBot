@@ -14,6 +14,8 @@ using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.Internals.Fibers;
 using Model;
 using NLog;
+using Quartz;
+using Quartz.Impl;
 using ShtrafiBLL;
 using StepApp.CommonExtensions.Logger;
 
@@ -64,10 +66,21 @@ namespace AutoBot
                 GlobalConfiguration.Configuration.DependencyResolver =
                     new AutofacWebApiDependencyResolver(Conversation.Container);
 
+
+                //sheduled tasks
+                builder.Register(x => new StdSchedulerFactory().GetScheduler()).As<IScheduler>();
+
+                RegisterRecurrentTasks();
+
+                logger.Info("recurrent tasks started...");
+
                 builder.Update(Conversation.Container);
 
 
                 GlobalConfiguration.Configure(WebApiConfig.Register);
+
+
+
 
 
                 logger.Info("Service successfully started");
@@ -80,6 +93,41 @@ namespace AutoBot
                 throw;
             }
            
+        }
+
+        private void RegisterRecurrentTasks()
+        {
+            //enabling scheduled tasks via Quartz.NET 
+            try
+            {
+                //  Common.Logging.LogManager.Adapter = new Common.Logging.Simple.ConsoleOutLoggerFactoryAdapter { Level = Common.Logging.LogLevel.Info };
+
+                // Grab the Scheduler instance from the Factory 
+                var scheduler = Conversation.Container.Resolve<IScheduler>();
+                //  IScheduler scheduler = StdSchedulerFactory.GetDefaultScheduler();
+
+                //   scheduler.JobFactory = new CommonExtensions.ScheduledTasks.Quartz.AutofacJobFactory(Conversation.Container);
+
+                var jobDetail = new JobDetailImpl("CheckShtrafs", "group1", typeof(FrequentTasksService));
+
+                scheduler.Start();
+
+                var trigger = TriggerBuilder.Create()
+                    .WithIdentity("trigger1", "group1")
+                    .StartNow()
+                    .WithSimpleSchedule(x => x
+                        .WithIntervalInMinutes(10)
+                        .RepeatForever())
+                    .Build();
+
+                // Tell quartz to schedule the job using our trigger
+                scheduler.ScheduleJob(jobDetail, trigger);
+            }
+            catch (SchedulerException se)
+            {
+                var logger = new LoggerService<ILogger>();
+                logger.Error(se);
+            }
         }
     }
 }
