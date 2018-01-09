@@ -10,7 +10,7 @@ using ShrafiBiz.Model;
 
 namespace ShrafiBiz.Client
 {
-    public class ShtrafBizClient
+    public class ShtrafBizClient : IShtrafBizClient
     {
         private const string serviceUri = "https://www.elpas.ru/api.php";
         private const string id = "R413393879901";
@@ -41,12 +41,16 @@ namespace ShrafiBiz.Client
 
                 var resp = client.Post(req);
                 var cont = resp.Content;
-                //  JsonConvert.DefaultSettings = () => new JsonSerializerSettings() { DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, MissingMemberHandling = MissingMemberHandling.Ignore };
+               //   JsonConvert.DefaultSettings = () => new JsonSerializerSettings() { DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, MissingMemberHandling = MissingMemberHandling.Ignore };
                 dynamic obj = JsonConvert.DeserializeObject(cont);
-                
-               //воркераунд потому что payload дегенератский
-                //массива с платежами нет, сериализуем во враппер
-                if (obj.l is JArray)
+
+            //воркераунд потому что payload дегенератский
+            //массива с платежами нет, сериализуем во враппер
+           // if (obj.l == null) return JsonConvert.DeserializeObject<GenericCheckPayResponse>(cont);
+
+            //нет штрафов
+            //todo: temp solution, exception here now
+            if (obj.l is JArray)
                 {
                     var paysWrapper = JsonConvert.DeserializeObject<GenericCheckPayResponse>(cont);
                     return new CheckPayResponse(){Err = paysWrapper.Err, Hash = paysWrapper.Hash, L = null, Msg = paysWrapper.Msg, Top = paysWrapper.Top};
