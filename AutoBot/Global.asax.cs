@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
 using System.Reflection;
 using System.Web;
 using System.Web.Http;
-using System.Web.Routing;
 using AutoBot.Dialogs;
 using Autofac;
 using Autofac.Integration.WebApi;
@@ -22,10 +18,11 @@ using Quartz.Impl;
 using ShrafiBiz.Client;
 using ShtrafiBLL;
 using StepApp.CommonExtensions.Logger;
+using StepApp.CommonExtensions.ScheduledTasks.Quartz;
 
 namespace AutoBot
 {
-    public class WebApiApplication : System.Web.HttpApplication
+    public class WebApiApplication : HttpApplication
     {
         protected void Application_Start()
         {
@@ -57,14 +54,15 @@ namespace AutoBot
                         .AsImplementedInterfaces()
                         .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
 
-                    builder.RegisterType<IShtrafBizClient>()
+                    builder.RegisterType<ShtrafBizClient>()
                         .Keyed<IShtrafBizClient>(FiberModule.Key_DoNotSerialize)
                         .AsImplementedInterfaces()
-                        .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
+                        .SingleInstance();
+                    //  .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
 
 
-
-                    builder.RegisterGeneric(typeof(LoggerService<>)).As(typeof(ILoggerService<>)).InstancePerDependency();
+                    builder.RegisterGeneric(typeof(LoggerService<>)).As(typeof(ILoggerService<>))
+                        .InstancePerDependency();
 
                     // Bot Storage: Here we register the state storage for your bot. 
                     // Default store: volatile in-memory store - Only for prototyping!
@@ -82,7 +80,15 @@ namespace AutoBot
                     builder.RegisterApiControllers(Assembly.GetExecutingAssembly());
                     builder.RegisterWebApiFilterProvider(config);
 
+                    //sheduled tasks
+                    builder.Register(x => new StdSchedulerFactory().GetScheduler().Result).As<IScheduler>();
 
+
+                    builder.Register(
+                            (c, p) =>
+                                new FrequentTasksService(c.Resolve<IShtrafBizClient>()))
+                        .AsSelf().SingleInstance();
+                    // .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
                 });
 
 
@@ -95,11 +101,13 @@ namespace AutoBot
                 cfg.MapHttpAttributeRoutes();
 
                 cfg.Routes.MapHttpRoute(
-                    name: "DefaultApi",
-                    routeTemplate: "api/{controller}/{id}",
-                    defaults: new { id = RouteParameter.Optional }
+                    "DefaultApi",
+                    "api/{controller}/{id}",
+                    new {id = RouteParameter.Optional}
                 );
             });
+
+            RegisterRecurrentTasks();
         }
 
         protected void Application_Start2()
@@ -109,10 +117,6 @@ namespace AutoBot
 
             try
             {
-
-
-
-
                 var builder = new ContainerBuilder();
 
                 //register dialogs
@@ -129,20 +133,19 @@ namespace AutoBot
 
                 //register dbcontext
                 builder.RegisterType<AutoBotContext>()
-                   .Keyed<AutoBotContext>(FiberModule.Key_DoNotSerialize).AsSelf()
-                   .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
+                    .Keyed<AutoBotContext>(FiberModule.Key_DoNotSerialize).AsSelf()
+                    .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
 
                 //register business services
                 builder.RegisterType<ShtrafiUserService>()
-                        .Keyed<IShtrafiUserService>(FiberModule.Key_DoNotSerialize)
-                        .AsImplementedInterfaces()
-                        .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
+                    .Keyed<IShtrafiUserService>(FiberModule.Key_DoNotSerialize)
+                    .AsImplementedInterfaces()
+                    .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
 
                 builder.RegisterType<IShtrafBizClient>()
                     .Keyed<IShtrafBizClient>(FiberModule.Key_DoNotSerialize)
                     .AsImplementedInterfaces()
                     .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
-
 
 
                 builder.RegisterGeneric(typeof(LoggerService<>)).As(typeof(ILoggerService<>)).InstancePerDependency();
@@ -163,7 +166,7 @@ namespace AutoBot
 
 
                 //sheduled tasks
-                builder.Register(x => new  StdSchedulerFactory().GetScheduler().Result).As<IScheduler>();
+                builder.Register(x => new StdSchedulerFactory().GetScheduler().Result).As<IScheduler>();
 
 
                 builder.Register(
@@ -178,16 +181,16 @@ namespace AutoBot
                 GlobalConfiguration.Configuration.DependencyResolver =
                     new AutofacWebApiDependencyResolver(Conversation.Container);
 
-               //   DependencyResolver.SetResolver(new AutofacDependencyResolver(container));
+                //   DependencyResolver.SetResolver(new AutofacDependencyResolver(container));
 
-               //   builder.Update(Conversation.Container);
+                //   builder.Update(Conversation.Container);
 
 
-               GlobalConfiguration.Configure(WebApiConfig.Register);
+                GlobalConfiguration.Configure(WebApiConfig.Register);
 
                 logger.Info("starting recurrent tasks...");
 
-             //   RegisterRecurrentTasks();
+                //   RegisterRecurrentTasks();
 
                 logger.Info("recurrent tasks started...");
 
@@ -201,7 +204,6 @@ namespace AutoBot
                 logger.Error(e);
                 throw;
             }
-           
         }
 
         private void RegisterRecurrentTasks()
@@ -212,11 +214,11 @@ namespace AutoBot
                 //  Common.Logging.LogManager.Adapter = new Common.Logging.Simple.ConsoleOutLoggerFactoryAdapter { Level = Common.Logging.LogLevel.Info };
 
                 // Grab the Scheduler instance from the Factory 
-                   var scheduler = Conversation.Container.Resolve<IScheduler>();
-              //  var scheduler = container.Resolve<IScheduler>();
+                var scheduler = Conversation.Container.Resolve<IScheduler>();
+                //  var scheduler = container.Resolve<IScheduler>();
                 //  IScheduler scheduler = StdSchedulerFactory.GetDefaultScheduler();
 
-             //   scheduler.JobFactory = new StepApp.CommonExtensions.ScheduledTasks.Quartz.AutofacJobFactory(Conversation.Container);
+                scheduler.JobFactory = new AutofacJobFactory(Conversation.Container);
 
                 var jobDetail = new JobDetailImpl("CheckShtrafs", "group1", typeof(FrequentTasksService));
 
