@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -31,7 +32,7 @@ namespace BusinessLayer.ScheduledTasks
         private readonly ILoggerService<ILogger> loggerService;
         private IDialog<object> welcomePollDialog;
 
-        private List<Tuple<User, DocumentSetToCheck, List<Pay>>> allShtrafs;
+        private List<Tuple<User, DocumentSetToCheck, Dictionary<string, Pay>>> allShtrafs;
 
 
         private const int MAX_RETRIES = 3;
@@ -78,7 +79,7 @@ namespace BusinessLayer.ScheduledTasks
             var dbContext = new Model.AutoBotContext();
 
             //check who need to be checked
-            var docSets = dbContext.DocumentSetsTocheck.Where(check => check.ScheduleCheck).ToList();
+            var docSets = dbContext.DocumentSetsTocheck.Where(check => check.ScheduleCheck).Include(check => check.User).ToList();
 
             //todo: add queue and splitting by stack (or sending by 10 batch), for now just all 1by1
             foreach (var docSet in docSets)
@@ -104,7 +105,7 @@ namespace BusinessLayer.ScheduledTasks
                     else if (pays.Err == 0)
                     {
                         var userShtrafs = pays.L;
-                        allShtrafs.Add(new Tuple<User, DocumentSetToCheck, List<Pay>>(docSet.User, docSet, new List<Pay>(userShtrafs.Values)));
+                        allShtrafs.Add(new Tuple<User, DocumentSetToCheck, System.Collections.Generic.Dictionary<string,Pay>>(docSet.User, docSet, userShtrafs));
                     }
 
 

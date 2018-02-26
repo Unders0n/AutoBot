@@ -67,6 +67,8 @@ namespace AutoBot
                     // Bot Storage: Here we register the state storage for your bot. 
                     // Default store: volatile in-memory store - Only for prototyping!
 
+                    //BOT Data storage
+
                     builder.RegisterModule(new AzureModule(Assembly.GetExecutingAssembly()));
 
                     var store = new InMemoryDataStore();
