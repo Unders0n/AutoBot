@@ -101,7 +101,6 @@ namespace AutoBot.Dialogs
             {
                 await context.PostAsync("Начисления не найдены.");
                 CheckUserRegisterAndSubscribe(context);
-
                // context.Done(1);
                 return;
             }
@@ -123,23 +122,16 @@ namespace AutoBot.Dialogs
             else if (pays.Err == 0)
             {
                 shtrafsAll = pays.L;
-                await PrintPaymentDetails(context);
+                var i = 1;
+                foreach (var pay in pays.L)
+                    await context.PostAsync($"{i++}: {pay.Value}");
+
+                var totalSumm = pays.L.Sum(pair => Int16.Parse(pair.Value.Sum));
+                var totalSummFeesrv = pays.L.Sum(pair => pair.Value.Feesrv);
+                await context.PostAsync(
+                    $"Всего **{pays.L.Count}** штрафов на общую сумму **{totalSumm}**р (+ {totalSummFeesrv}р комиссия)");
+
             }
-
-
-           
-        }
-
-        private async Task PrintPaymentDetails(IDialogContext context)
-        {
-            var i = 1;
-            foreach (var pay in pays.L)
-                await context.PostAsync($"{i++}: {pay.Value}");
-
-            var totalSumm = pays.L.Sum(pair => Int16.Parse(pair.Value.Sum));
-            var totalSummFeesrv = pays.L.Sum(pair => pair.Value.Feesrv);
-            await context.PostAsync(
-                $"Всего **{pays.L.Count}** штрафов на общую сумму **{totalSumm}**р (+ {totalSummFeesrv}р комиссия)");
 
 
             //  await context.PostAsync($"введите номера штрафов для оплаты или нажмите кнопку \"оплатить все\"");

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
 using AutoBot.Dialogs;
@@ -40,7 +39,7 @@ namespace AutoBot
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
         /// </summary>
-        public async Task<HttpResponseMessage> Post([FromBody]Activity activity, CancellationToken token)
+        public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
         {
             try
             {
@@ -66,7 +65,7 @@ namespace AutoBot
                         }
                         //ignore luis now
                         await Conversation.SendAsync(activity,
-                            () => new ExceptionHandlerDialog<object>(_rootDialog, true), token);
+                            () => new ExceptionHandlerDialog<object>(_rootDialog, true));
 
                         /* await Conversation.SendAsync(activity,
                              () => new ExceptionHandlerDialog<object>(_rootLuisDialog, true));*/
