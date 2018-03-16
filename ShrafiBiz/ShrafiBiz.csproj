@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ShrafiBiz</RootNamespace>
     <AssemblyName>ShrafiBiz</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Client\IShtrafBizClient.cs" />
     <Compile Include="Client\ShtrafBizClient.cs" />
     <Compile Include="Model\CheckPayResponse.cs" />
     <Compile Include="Model\CreateZkzResponse.cs" />
@@ -56,7 +57,18 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StepApp\StepApp.BotExtensions\StepApp.BotExtensions.csproj">
+      <Project>{85728187-8a83-4be0-9ff6-56836bb8355f}</Project>
+      <Name>StepApp.BotExtensions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\StepApp\StepApp.CommonExtensions\StepApp.CommonExtensions.csproj">
+      <Project>{b653653f-b3a1-489b-a6db-a4c3e5a486bc}</Project>
+      <Name>StepApp.CommonExtensions</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

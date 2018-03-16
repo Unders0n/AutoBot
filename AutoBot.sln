@@ -1,9 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoBot", "AutoBot\AutoBot.csproj", "{9EC69DD4-D1DC-420E-83F5-E50BD2646170}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StepApp", "StepApp", "{FDEC97D3-DD32-479F-AED3-CACE392AFC73}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StepApp.BotExtensions", "StepApp\StepApp.BotExtensions\StepApp.BotExtensions.csproj", "{85728187-8A83-4BE0-9FF6-56836BB8355F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StepApp.CommonExtensions", "StepApp\StepApp.CommonExtensions\StepApp.CommonExtensions.csproj", "{B653653F-B3A1-489B-A6DB-A4C3E5A486BC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Model", "Model\Model.csproj", "{1ED24DB9-D981-4BFF-A711-675343600918}"
 EndProject
@@ -23,6 +29,14 @@ Global
 		{9EC69DD4-D1DC-420E-83F5-E50BD2646170}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9EC69DD4-D1DC-420E-83F5-E50BD2646170}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EC69DD4-D1DC-420E-83F5-E50BD2646170}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85728187-8A83-4BE0-9FF6-56836BB8355F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85728187-8A83-4BE0-9FF6-56836BB8355F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85728187-8A83-4BE0-9FF6-56836BB8355F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85728187-8A83-4BE0-9FF6-56836BB8355F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B653653F-B3A1-489B-A6DB-A4C3E5A486BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B653653F-B3A1-489B-A6DB-A4C3E5A486BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B653653F-B3A1-489B-A6DB-A4C3E5A486BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B653653F-B3A1-489B-A6DB-A4C3E5A486BC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1ED24DB9-D981-4BFF-A711-675343600918}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1ED24DB9-D981-4BFF-A711-675343600918}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1ED24DB9-D981-4BFF-A711-675343600918}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -42,6 +56,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{85728187-8A83-4BE0-9FF6-56836BB8355F} = {FDEC97D3-DD32-479F-AED3-CACE392AFC73}
+		{B653653F-B3A1-489B-A6DB-A4C3E5A486BC} = {FDEC97D3-DD32-479F-AED3-CACE392AFC73}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F5D36952-C78A-4F12-A223-618329E729D0}

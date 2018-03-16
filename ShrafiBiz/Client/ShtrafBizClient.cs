@@ -10,7 +10,7 @@ using ShrafiBiz.Model;
 
 namespace ShrafiBiz.Client
 {
-    public class ShtrafBizClient
+    public class ShtrafBizClient : IShtrafBizClient
     {
         private const string serviceUri = "https://www.elpas.ru/api.php";
         private const string id = "R413393879901";
