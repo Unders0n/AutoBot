@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using RestSharp;
 using ShrafiBiz.Client;
 using ShrafiBiz.Model;
+using ShtrafiBLL;
 
 namespace TestConsole
 {
@@ -17,6 +18,17 @@ namespace TestConsole
     {
         static void Main(string[] args)
         {
+            var dbContext = new  AutoBotContext();
+            var dbContext2 = new AutoBotContext();
+
+
+            var srv = new ShtrafiUserService(dbContext);
+           var res = srv.RegisterDocumentSetToCheck(dbContext2.Users.FirstOrDefault(), "1621390815", "test doc set name",
+                "1630048283");
+
+            return;
+
+
             var userTelegrammId = "TestUser";
 
             var clientId = "R413393879901";

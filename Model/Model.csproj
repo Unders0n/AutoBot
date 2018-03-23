@@ -75,6 +75,10 @@
     <Compile Include="Migrations\201712201443596_RemoveUserIdWithDomain.Designer.cs">
       <DependentUpon>201712201443596_RemoveUserIdWithDomain.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201803231404116_DocumentSetsTocheckFix.cs" />
+    <Compile Include="Migrations\201803231404116_DocumentSetsTocheckFix.Designer.cs">
+      <DependentUpon>201803231404116_DocumentSetsTocheckFix.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -102,6 +106,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201712201443596_RemoveUserIdWithDomain.resx">
       <DependentUpon>201712201443596_RemoveUserIdWithDomain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803231404116_DocumentSetsTocheckFix.resx">
+      <DependentUpon>201803231404116_DocumentSetsTocheckFix.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

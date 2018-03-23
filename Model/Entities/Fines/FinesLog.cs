@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace Model.Entities.Fines
 {
     //some summaries to log events
+    [Serializable]
     public class FinesLog
     {
         [Key]

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Model.Entities
 {
+    [Serializable]
     class CarInGarage
     {
         public CarInGarage Car { get; set; }

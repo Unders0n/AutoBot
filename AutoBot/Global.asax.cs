@@ -109,7 +109,7 @@ namespace AutoBot
                 );
             });
 
-            RegisterRecurrentTasks();
+           // RegisterRecurrentTasks();
         }
 
         protected void Application_Start2()

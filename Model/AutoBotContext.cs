@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Model.Entities;
 using Model.Entities.Fines;
 
@@ -30,7 +32,33 @@ namespace Model
 
         public virtual DbSet<FinesLog> FinesLogs { get; set; }
 
-        
+        public override int SaveChanges()
+        {
+            try
+            {
+                return base.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                return 0;
+            }
+          
+        }
+
+        public override Task<int> SaveChangesAsync()
+        {
+            try
+            {
+                return base.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                return null;
+            }
+            
+        }
     }
 
     //public class MyEntity

@@ -100,7 +100,7 @@ namespace AutoBot.Dialogs
             if (pays.Err == -4)
             {
                 await context.PostAsync("Начисления не найдены.");
-                CheckUserRegisterAndSubscribe(context);
+                await CheckUserRegisterAndSubscribe(context);
                // context.Done(1);
                 return;
             }
@@ -195,16 +195,16 @@ namespace AutoBot.Dialogs
 
             await context.PostAsync(
                 $"Выбрано штрафов: **{shtrafsWantToPay.Count}**, на общую сумму **{totalSumm + totalSummFeesrv}**р (из них комиссия {totalSummFeesrv}р) ");
-            PromptDialog.Text(context, ResumeAfterShtrafs, "введите фамилию плательщика");
-        }
-
-        private async Task ResumeAfterShtrafs(IDialogContext context, IAwaitable<string> result)
-        {
-            surname = await result;
-            PromptDialog.Text(context, ResumeAfterSurname, "введите имя плательщика");
+            PromptDialog.Text(context, ResumeAfterSurname, "введите фамилию плательщика");
         }
 
         private async Task ResumeAfterSurname(IDialogContext context, IAwaitable<string> result)
+        {
+            surname = await result;
+            PromptDialog.Text(context, ResumeAfterName, "введите имя плательщика");
+        }
+
+        private async Task ResumeAfterName(IDialogContext context, IAwaitable<string> result)
         {
             name = await result;
             var shtrafiCLient = new ShtrafBizClient();
@@ -224,7 +224,7 @@ namespace AutoBot.Dialogs
                 // await context.PostAsync($"Для оплаты перейдите по ссылке: {resp.Urlpay}");
 
                 //todo: abstract out of telegram id
-                CheckUserRegisterAndSubscribe(context);
+                await CheckUserRegisterAndSubscribe(context);
 
             }
             else
@@ -232,7 +232,7 @@ namespace AutoBot.Dialogs
                 await context.PostAsync($"При оплате произошла ошибка. Мы уже в курсе. Приносим свои извинения. Повторите поиск.");
             }
 
-            context.Done(1);
+           
             /*var button = new CardAction
             {
                 //  Value = "test",
@@ -243,11 +243,11 @@ namespace AutoBot.Dialogs
             await context.PostWithButtonsAsync("", new List<CardAction>() {button});*/
         }
 
-        private async void CheckUserRegisterAndSubscribe(IDialogContext context)
+        private async Task CheckUserRegisterAndSubscribe(IDialogContext context)
         {
             var userId = context.Activity.From.Id;
 
-            user = _shtrafiUserService.GetUserByMessengerId(context.Activity.From.Name);
+            user = _shtrafiUserService.GetUserByMessengerId(context.Activity.From.Id);
             if (user == null)
             {
                 var registeredUser = _shtrafiUserService.RegisterUserAfterFirstPay(userId, name, surname, sts, vu);
@@ -285,6 +285,12 @@ namespace AutoBot.Dialogs
                     PromptDialog.Confirm(context, ResumeAfterAskToSaveSubscribtion,
                         "Сохранить подписку на новые штрафы для этого набора документов?");
                 }
+                else
+                {
+                    await context.PostAsync(
+                    "У вас уже есть подписка об уведомлении по этому набору документов. Если хотите отменить введите **отменить подписку**");
+                context.Done(1);
+                }
                 
             }
         }
@@ -294,16 +300,24 @@ namespace AutoBot.Dialogs
             if (await result)
             {
                 string name = "";
-                PromptDialog.Text(context, async (dialogContext, awaitable) => name = await awaitable, "дайте имя этому набору документов , например \"машина Мамы\"");
-                if (_shtrafiUserService.RegisterDocumentSetToCheck(user, sts, vu, name) != null)
-                {
-                    
-                }
-                else
-                {
-                    await context.PostAsync("При создании подписки произошла ошибка. Попробуйте снова.");
-                    await ResumeAfterAskToSaveSubscribtion(context, new AwaitableFromItem<bool>(true));
-                }
+                PromptDialog.Text(context, ResumeAfterNameOfDocSet, "дайте имя этому набору документов , например \"машина Мамы\"");
+               
+            }
+        }
+
+        private async Task ResumeAfterNameOfDocSet(IDialogContext context, IAwaitable<string> result)
+        {
+
+            name = await result;
+            if (_shtrafiUserService.RegisterDocumentSetToCheck(user, sts, vu, name) != null)
+            {
+                await context.PostAsync($"Подписка на набор документов: СТС: {sts}, ВУ: {vu} успешно сохранена под именем **{name}**");
+                context.Done(1);
+            }
+            else
+            {
+                await context.PostAsync("При создании подписки произошла ошибка. Попробуйте снова.");
+                await ResumeAfterAskToSaveSubscribtion(context, new AwaitableFromItem<bool>(true));
             }
         }
 
