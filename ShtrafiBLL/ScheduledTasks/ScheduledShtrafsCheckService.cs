@@ -25,14 +25,14 @@ using StepApp.CommonExtensions.Logger;
 
 namespace BusinessLayer.ScheduledTasks
 {
-    public class FrequentTasksService : IFrequentTasksService
+    public class ScheduledShtrafsCheckService : IScheduledShtrafsCheckService
     {
         private readonly IShtrafBizClient _shtrafiBizClient;
 
         private readonly ILoggerService<ILogger> loggerService;
         private IDialog<object> welcomePollDialog;
 
-        private List<Tuple<User, DocumentSetToCheck, Dictionary<string, Pay>>> allShtrafs;
+        private List<UsersShtrafiWithDocSet> allShtrafs = new List<UsersShtrafiWithDocSet>();
 
 
         private const int MAX_RETRIES = 3;
@@ -42,13 +42,13 @@ namespace BusinessLayer.ScheduledTasks
         // private WelcomePollDialog _welcomePollDialog;
         //     private IDbContext dbContext;
 
-        public FrequentTasksService()
+        public ScheduledShtrafsCheckService()
         {
             _shtrafiBizClient = Conversation.Container.Resolve<IShtrafBizClient>();
         }
 
         //todo: resolve issue with DI
-        public FrequentTasksService(IShtrafBizClient shtrafiBizClient)
+        public ScheduledShtrafsCheckService(IShtrafBizClient shtrafiBizClient)
         {
             _shtrafiBizClient = shtrafiBizClient;
             // _globalSettingsService = new GlobalSettings.GlobalSettingsService(new FlowContext());
@@ -105,7 +105,9 @@ namespace BusinessLayer.ScheduledTasks
                     else if (pays.Err == 0)
                     {
                         var userShtrafs = pays.L;
-                        allShtrafs.Add(new Tuple<User, DocumentSetToCheck, System.Collections.Generic.Dictionary<string,Pay>>(docSet.User, docSet, userShtrafs));
+                    //    allShtrafs.Add(new Tuple<User, DocumentSetToCheck, System.Collections.Generic.Dictionary<string,Pay>>(docSet.User, docSet, userShtrafs));
+                        allShtrafs.Add(new UsersShtrafiWithDocSet(docSet.User, docSet, userShtrafs));
+
                     }
 
 
@@ -147,6 +149,22 @@ namespace BusinessLayer.ScheduledTasks
                  await fakeMessage.StartConversationWithUserFromDialog(new ExceptionHandlerDialog<object>(myform, true));*/
             }
         }
+
+
     }
+
+public class UsersShtrafiWithDocSet
+{
+    public UsersShtrafiWithDocSet(User user, DocumentSetToCheck documentSetToCheck, Dictionary<string, Pay> shtrafs)
+    {
+        User = user;
+        DocumentSetToCheck = documentSetToCheck;
+        Shtrafs = shtrafs;
+    }
+
+    public User User { get; set; }
+    public DocumentSetToCheck DocumentSetToCheck { get; set; }
+    public Dictionary<string, Pay> Shtrafs { get; set; }
+}
 
 

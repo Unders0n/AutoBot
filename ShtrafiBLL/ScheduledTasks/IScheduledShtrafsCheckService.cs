@@ -2,7 +2,7 @@
 
 namespace BusinessLayer.ScheduledTasks
 {
-    public interface IFrequentTasksService : IJob
+    public interface IScheduledShtrafsCheckService : IJob
     {
 
        

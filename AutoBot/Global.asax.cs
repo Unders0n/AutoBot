@@ -88,7 +88,7 @@ namespace AutoBot
 
                     builder.Register(
                             (c, p) =>
-                                new FrequentTasksService(c.Resolve<IShtrafBizClient>()))
+                                new ScheduledShtrafsCheckService(c.Resolve<IShtrafBizClient>()))
                         .AsSelf().SingleInstance();
                     // .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
                 });
@@ -109,7 +109,7 @@ namespace AutoBot
                 );
             });
 
-           // RegisterRecurrentTasks();
+            RegisterRecurrentTasks();
         }
 
         protected void Application_Start2()
@@ -173,7 +173,7 @@ namespace AutoBot
 
                 builder.Register(
                         (c, p) =>
-                            new FrequentTasksService(c.Resolve<IShtrafBizClient>()))
+                            new ScheduledShtrafsCheckService(c.Resolve<IShtrafBizClient>()))
                     .AsSelf()
                     .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
 
@@ -222,15 +222,17 @@ namespace AutoBot
 
                 scheduler.JobFactory = new AutofacJobFactory(Conversation.Container);
 
-                var jobDetail = new JobDetailImpl("CheckShtrafs", "group1", typeof(FrequentTasksService));
+                var jobDetail = new JobDetailImpl("CheckShtrafs", "group1", typeof(ScheduledShtrafsCheckService));
 
                 scheduler.Start();
 
+
+                //todo: change time
                 var trigger = TriggerBuilder.Create()
                     .WithIdentity("trigger1", "group1")
                     .StartNow()
                     .WithSimpleSchedule(x => x
-                        .WithIntervalInMinutes(10)
+                        .WithIntervalInHours(24)
                         .RepeatForever())
                     .Build();
 
