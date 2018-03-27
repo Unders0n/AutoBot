@@ -21,6 +21,10 @@ namespace ShtrafiBLL
             this._autoBotContext = _autoBotContext;
         }
 
+
+
+
+        [Obsolete]
         public User RegisterUserAfterFirstPay(string UserIdTelegramm, string payName, string paySurname, string sts,
             string vu = "")
         {
@@ -57,13 +61,38 @@ namespace ShtrafiBLL
             }
         }
 
-        public DocumentSetToCheck RegisterDocumentSetToCheck(User user, string sts, string name, string vu = "")
+        public User GetUserAndRegisterIfNeeded(string UserIdTelegramm)
+        {
+            try
+            {
+                var userInDb = GetUserByMessengerId(UserIdTelegramm);
+                if (userInDb != null) return userInDb;
+
+                var usr = new User();
+                //usr.IdWithDomain = UserIdTelegramm
+                usr.UserIdTelegramm = UserIdTelegramm;
+                usr.RegistrationDate = DateTime.Now;
+
+                _autoBotContext.Users.Add(usr);
+                _autoBotContext.SaveChanges();
+                return usr;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
+        public DocumentSetToCheck RegisterDocumentSetToCheck(User user, string sts, string vu, string name)
         {
             DocumentSetToCheck doc;
-            //find user in dbContext
+
+            //find user in dbContext 
+          
             var userInContext = GetUserById(user.Id);
 
-            if (userInContext.DocumentSetsTocheck.FirstOrDefault(check => check.Sts == sts) == null)
+            if (GetDocumentSetToCheck(userInContext, sts) == null)
             {
                 doc = new DocumentSetToCheck
                 {
@@ -84,6 +113,13 @@ namespace ShtrafiBLL
             // new Exception("Подписка для этого пользователя с данным");
         }
 
+        public DocumentSetToCheck GetDocumentSetToCheck(User user, string sts)
+        {
+            var userInContext = GetUserById(user.Id);
+
+            return userInContext.DocumentSetsTocheck.FirstOrDefault(check => check.Sts == sts);
+        }
+
         public User GetUserByMessengerId(string UserIdTelegramm)
         {
             return _autoBotContext.Users.Include(user => user.DocumentSetsTocheck)
@@ -102,5 +138,7 @@ namespace ShtrafiBLL
             if (docSetInDb != null) docSetInDb.ScheduleCheck = SubscriptionToggle;
             _autoBotContext.SaveChanges();
         }
+
+      
     }
 }

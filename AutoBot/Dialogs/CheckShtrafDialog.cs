@@ -96,11 +96,14 @@ namespace AutoBot.Dialogs
         {
             pays = shtrafiCLient.CheckPay(sts, vu);
 
+            //register user if not
+            user = _shtrafiUserService.GetUserAndRegisterIfNeeded(context.Activity.From.Id);
+
             //нет штрафов
             if (pays.Err == -4)
             {
-                await context.PostAsync("Начисления не найдены.");
-                await CheckUserRegisterAndSubscribe(context);
+                await context.PostAsync("**Штрафов не найдено.**");
+                await Subscribe(context);
                // context.Done(1);
                 return;
             }
@@ -149,8 +152,16 @@ namespace AutoBot.Dialogs
                 Title = "оплатить все"
             };
 
+            var buttonNew = new CardAction
+            {
+                //  Value = "test",
+                Value = "новый",
+                Type = "imBack",
+                Title = "новый поиск"
+            };
 
-            var cardForButton = new ThumbnailCard {Buttons = new List<CardAction> {buttonPay}};
+
+            var cardForButton = new ThumbnailCard {Buttons = new List<CardAction> {buttonPay, buttonNew } };
             mes.Attachments.Add(cardForButton.ToAttachment());
 
             await context.PostAsync(mes);
@@ -176,6 +187,20 @@ namespace AutoBot.Dialogs
             var res = resu as Activity;
 
             var txt = res.Text;
+
+            if (res.Text == "новый")
+            {
+                if (_shtrafiUserService.GetDocumentSetToCheck(user, sts) == null)
+                {
+                    PromptDialog.Confirm(context, ResumeAfterAskToSaveSubscribtion,
+                        "Сохранить подписку на новые штрафы?");
+                    return;
+                }
+
+                context.Done(1);
+                return;
+                //todo: add cancelling of subscription
+            }
 
             if (txt == "оплатить все")
             {
@@ -224,7 +249,7 @@ namespace AutoBot.Dialogs
                 // await context.PostAsync($"Для оплаты перейдите по ссылке: {resp.Urlpay}");
 
                 //todo: abstract out of telegram id
-                await CheckUserRegisterAndSubscribe(context);
+                await Subscribe(context);
 
             }
             else
@@ -243,14 +268,16 @@ namespace AutoBot.Dialogs
             await context.PostWithButtonsAsync("", new List<CardAction>() {button});*/
         }
 
-        private async Task CheckUserRegisterAndSubscribe(IDialogContext context)
+        private async Task Subscribe(IDialogContext context)
         {
-            var userId = context.Activity.From.Id;
+           // var userId = context.Activity.From.Id;
 
-            user = _shtrafiUserService.GetUserByMessengerId(context.Activity.From.Id);
+            user = _shtrafiUserService.GetUserByMessengerId(user.UserIdTelegramm);
             if (user == null)
             {
-                var registeredUser = _shtrafiUserService.RegisterUserAfterFirstPay(userId, name, surname, sts, vu);
+              //  var registeredUser = _shtrafiUserService.RegisterUserAfterFirstPay(userId, name, surname, sts, vu);
+
+                var subscribedDocSet = _shtrafiUserService.RegisterDocumentSetToCheck(user, sts, vu, name);
 
                 var buttonOk = new CardAction
                 {
@@ -283,7 +310,7 @@ namespace AutoBot.Dialogs
                 if (user.DocumentSetsTocheck.FirstOrDefault(check => check.Sts == sts) == null)
                 {
                     PromptDialog.Confirm(context, ResumeAfterAskToSaveSubscribtion,
-                        "Сохранить подписку на новые штрафы для этого набора документов?");
+                        "Сохранить подписку на новые штрафы для этих документов? Мы оповестим вас только если появится новый штраф и не будем надоедать сообщениями.");
                 }
                 else
                 {
@@ -299,19 +326,28 @@ namespace AutoBot.Dialogs
         {
             if (await result)
             {
-                string name = "";
-                PromptDialog.Text(context, ResumeAfterNameOfDocSet, "дайте имя этому набору документов , например \"машина Мамы\"");
-               
+                //if its first set of docs
+                if (user.DocumentSetsTocheck == null || user?.DocumentSetsTocheck.Count == 0) await SaveSubscriptionOfDocSet(context, "основной");
+                else
+                {
+                    name = "";
+                    PromptDialog.Text(context, ResumeAfterNameOfDocSet, "дайте имя этому набору документов , например \"машина Мамы\"");
+                }
             }
         }
 
         private async Task ResumeAfterNameOfDocSet(IDialogContext context, IAwaitable<string> result)
         {
-
             name = await result;
-            if (_shtrafiUserService.RegisterDocumentSetToCheck(user, sts, vu, name) != null)
+            await SaveSubscriptionOfDocSet(context, name);
+        }
+
+        private async Task SaveSubscriptionOfDocSet(IDialogContext context, string nameOfSet)
+        {
+            if (_shtrafiUserService.RegisterDocumentSetToCheck(user, sts, vu, nameOfSet) != null)
             {
-                await context.PostAsync($"Подписка на набор документов: СТС: {sts}, ВУ: {vu} успешно сохранена под именем **{name}**");
+                string txtVu = (vu != null) ?  $", Водительское: {vu}" : "";
+                await context.PostAsync($"Подписка на набор документов: Свидетельство: {sts} {txtVu} успешно сохранена под именем **{nameOfSet}**");
                 context.Done(1);
             }
             else
