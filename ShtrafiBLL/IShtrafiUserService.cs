@@ -8,7 +8,7 @@ namespace ShtrafiBLL
         User GetUserByMessengerId(string UserIdTelegramm);
         User RegisterUserAfterFirstPay(string UserIdTelegramm, string payName, string paySurname, string sts, string vu = "");
 
-        User GetUserAndRegisterIfNeeded(string UserIdTelegramm);
+        User GetUserAndRegisterIfNeeded(string userIdTelegramm, string mainConversationReferenceSerialized);
 
         DocumentSetToCheck RegisterDocumentSetToCheck(User user, string sts, string vu, string name);
 

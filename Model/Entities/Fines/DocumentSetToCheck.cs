@@ -26,6 +26,9 @@ namespace Model.Entities.Fines
 
         public User User { get; set; }
 
-        
+        public override string ToString()
+        {
+            return $"{User}'s shtraf {Name}";
+        }
     }
 }

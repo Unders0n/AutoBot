@@ -61,17 +61,18 @@ namespace ShtrafiBLL
             }
         }
 
-        public User GetUserAndRegisterIfNeeded(string UserIdTelegramm)
+        public User GetUserAndRegisterIfNeeded(string userIdTelegramm, string mainConversationReferenceSerialized)
         {
             try
             {
-                var userInDb = GetUserByMessengerId(UserIdTelegramm);
+                var userInDb = GetUserByMessengerId(userIdTelegramm);
                 if (userInDb != null) return userInDb;
 
                 var usr = new User();
                 //usr.IdWithDomain = UserIdTelegramm
-                usr.UserIdTelegramm = UserIdTelegramm;
+                usr.UserIdTelegramm = userIdTelegramm;
                 usr.RegistrationDate = DateTime.Now;
+                usr.MainConversationReferenceSerialized = mainConversationReferenceSerialized;
 
                 _autoBotContext.Users.Add(usr);
                 _autoBotContext.SaveChanges();

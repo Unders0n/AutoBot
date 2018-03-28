@@ -88,7 +88,7 @@ namespace AutoBot
 
                     builder.Register(
                             (c, p) =>
-                                new ScheduledShtrafsCheckService(c.Resolve<IShtrafBizClient>()))
+                                new ScheduledShtrafsCheckService(c.Resolve<IShtrafBizClient>(), c.Resolve<CheckShtrafDialog>()))
                         .AsSelf().SingleInstance();
                     // .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
                 });
@@ -111,6 +111,7 @@ namespace AutoBot
 
             RegisterRecurrentTasks();
         }
+/*
 
         protected void Application_Start2()
         {
@@ -161,10 +162,10 @@ namespace AutoBot
                 builder.RegisterWebApiFilterProvider(config);
 
                 /* builder.RegisterType<MessagesController>().InstancePerDependency();
-                 builder.RegisterType<InteractiveMenuController>().InstancePerDependency();*/
+                 builder.RegisterType<InteractiveMenuController>().InstancePerDependency();#1#
 
                 /*GlobalConfiguration.Configuration.DependencyResolver =
-                    new AutofacWebApiDependencyResolver(Conversation.Container);*/
+                    new AutofacWebApiDependencyResolver(Conversation.Container);#1#
 
 
                 //sheduled tasks
@@ -207,6 +208,7 @@ namespace AutoBot
                 throw;
             }
         }
+*/
 
         private void RegisterRecurrentTasks()
         {

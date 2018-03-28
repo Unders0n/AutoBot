@@ -37,5 +37,10 @@ namespace Model.Entities
         public string PaySurname { get; set; }
 
         public virtual List<DocumentSetToCheck> DocumentSetsTocheck { get; set; }
+
+        /// <summary>
+        /// Serialized Microsoft.Bot.Connector.ConversationReference for easy proactive messaging
+        /// </summary>
+        public string MainConversationReferenceSerialized { get; set; }
     }
 }

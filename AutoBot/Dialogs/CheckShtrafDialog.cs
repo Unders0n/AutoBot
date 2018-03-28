@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Bot.Builder.ConnectorEx;
 using StepApp.BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
 using Model.Entities;
+using Newtonsoft.Json;
 using ShrafiBiz.Client;
 using ShrafiBiz.Model;
 using ShtrafiBLL;
@@ -97,7 +99,14 @@ namespace AutoBot.Dialogs
             pays = shtrafiCLient.CheckPay(sts, vu);
 
             //register user if not
-            user = _shtrafiUserService.GetUserAndRegisterIfNeeded(context.Activity.From.Id);
+            //todo: separate into 2 methods to decrease load
+            var conversationReference = context.Activity.ToConversationReference();
+            var dialogRefSerialized = JsonConvert.SerializeObject(conversationReference);
+
+            user = _shtrafiUserService.GetUserAndRegisterIfNeeded(context.Activity.From.Id, dialogRefSerialized);
+
+            
+
 
             //нет штрафов
             if (pays.Err == -4)

@@ -15,12 +15,9 @@ using Microsoft.Bot.Builder.FormFlow;
 using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
 using Model;
-using Model.Entities;
-using Model.Entities.Fines;
 using NLog;
 using Quartz;
 using ShrafiBiz.Client;
-using ShrafiBiz.Model;
 using StepApp.CommonExtensions.Logger;
 
 namespace BusinessLayer.ScheduledTasks
@@ -37,6 +34,7 @@ namespace BusinessLayer.ScheduledTasks
 
         private const int MAX_RETRIES = 3;
         public int connectTries;
+        private IDialog<object> _dialogToStart;
 
         // private GlobalSettingsService _globalSettingsService;
         // private WelcomePollDialog _welcomePollDialog;
@@ -48,8 +46,9 @@ namespace BusinessLayer.ScheduledTasks
         }
 
         //todo: resolve issue with DI
-        public ScheduledShtrafsCheckService(IShtrafBizClient shtrafiBizClient)
+        public ScheduledShtrafsCheckService(IShtrafBizClient shtrafiBizClient, IDialog<object> dialogToStart)
         {
+            _dialogToStart = dialogToStart;
             _shtrafiBizClient = shtrafiBizClient;
             // _globalSettingsService = new GlobalSettings.GlobalSettingsService(new FlowContext());
             loggerService = new LoggerService<ILogger>();
@@ -109,14 +108,45 @@ namespace BusinessLayer.ScheduledTasks
                         allShtrafs.Add(new UsersShtrafiWithDocSet(docSet.User, docSet, userShtrafs));
 
                     }
-
-
                 }
+            }
+            await SendNewShtrafNotification(allShtrafs);
+        }
 
+        private async Task SendNewShtrafNotification(List<UsersShtrafiWithDocSet> allShtrafs)
+        {
+            loggerService.Info("Sending proactive info about shtrafs");
 
+           
 
+            foreach (var shtrafiWithDocSet in allShtrafs)
+            {
+                loggerService.Info($"Sending proactive info about {shtrafiWithDocSet.DocumentSetToCheck}");
+                await SendProactive(_dialogToStart, shtrafiWithDocSet.User.UserIdTelegramm, "");
+                loggerService.Info($"proactive info about {shtrafiWithDocSet.DocumentSetToCheck} successful");
             }
         }
+
+        private static async Task SendProactive(IDialog<object> dialog, string userSlackId, string userSlackName, object[] customParams = null)
+        {
+            var activity = new Microsoft.Bot.Connector.Activity();
+
+            // var botId = _globalSettingsService.BotChannelId;
+            var botId = "B7ZEWQX0V:T7XPDKESV";
+
+            activity.From = new ChannelAccount("", "test");
+            activity.ServiceUrl = "https://slack.botframework.com/";
+            activity.Recipient = new ChannelAccount(botId);
+            activity.ChannelId = "slack";
+
+            var fakeMessage = await activity.CreateFakeProactiveDirectMessage(userSlackId, userSlackName);
+
+            //try to paste phrase
+
+
+            await fakeMessage.StartConversationWithUserFromDialog(new ExceptionHandlerDialog<object>(dialog, true), null, customParams);
+        }
+
 
         private async Task SendFollowupPoll()
             {
@@ -152,19 +182,3 @@ namespace BusinessLayer.ScheduledTasks
 
 
     }
-
-public class UsersShtrafiWithDocSet
-{
-    public UsersShtrafiWithDocSet(User user, DocumentSetToCheck documentSetToCheck, Dictionary<string, Pay> shtrafs)
-    {
-        User = user;
-        DocumentSetToCheck = documentSetToCheck;
-        Shtrafs = shtrafs;
-    }
-
-    public User User { get; set; }
-    public DocumentSetToCheck DocumentSetToCheck { get; set; }
-    public Dictionary<string, Pay> Shtrafs { get; set; }
-}
-
-
