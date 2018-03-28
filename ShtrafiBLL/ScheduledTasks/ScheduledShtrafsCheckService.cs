@@ -5,16 +5,19 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using StepApp.BotExtensions.ActivityExtensions;
 using StepApp.BotExtensions.DialogExtensions;
 
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.FormFlow;
 using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
 using Model;
+using Newtonsoft.Json;
 using NLog;
 using Quartz;
 using ShrafiBiz.Client;
@@ -126,6 +129,32 @@ namespace BusinessLayer.ScheduledTasks
                 loggerService.Info($"proactive info about {shtrafiWithDocSet.DocumentSetToCheck} successful");
             }
         }
+
+        public async Task SendProactive(string conversationReference, IDialog<object> dialogToStart)
+        {
+            // Recreate the message from the conversation reference that was saved previously.
+            var message = JsonConvert.DeserializeObject<ConversationReference>(conversationReference).GetPostToBotMessage();
+            var client = new ConnectorClient(new Uri(message.ServiceUrl));
+
+            // Create a scope that can be used to work with state from bot framework.
+            using (var scope = DialogModule.BeginLifetimeScope(Conversation.Container, message))
+            {
+                var botData = scope.Resolve<IBotData>();
+                await botData.LoadAsync(CancellationToken.None);
+
+                // This is the dialog stack.
+                var stack = scope.Resolve<IDialogTask>();
+
+                // Create the new dialog and add it to the stack.
+                
+                stack.Call(dialogToStart.Void<object, IMessageActivity>(), null);
+                await stack.PollAsync(CancellationToken.None);
+
+                // Flush the dialog stack back to its state store.
+                await botData.FlushAsync(CancellationToken.None);
+            }
+        }
+
 
         private static async Task SendProactive(IDialog<object> dialog, string userSlackId, string userSlackName, object[] customParams = null)
         {
