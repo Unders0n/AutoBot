@@ -3,9 +3,9 @@ using System.Reflection;
 using System.Web;
 using System.Web.Http;
 using AutoBot.Dialogs;
+using AutoBot.ScheduledTasks;
 using Autofac;
 using Autofac.Integration.WebApi;
-using BusinessLayer.ScheduledTasks;
 using Microsoft.Bot.Builder.Azure;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Internals;
@@ -46,13 +46,15 @@ namespace AutoBot
                     //register dbcontext
                     builder.RegisterType<AutoBotContext>()
                         .Keyed<AutoBotContext>(FiberModule.Key_DoNotSerialize).AsSelf()
-                        .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
+                        .InstancePerDependency();
+                       // .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
 
                     //register business services
                     builder.RegisterType<ShtrafiUserService>()
                         .Keyed<IShtrafiUserService>(FiberModule.Key_DoNotSerialize)
                         .AsImplementedInterfaces()
-                        .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
+                        .SingleInstance();
+                      //  .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
 
                     builder.RegisterType<ShtrafBizClient>()
                         .Keyed<IShtrafBizClient>(FiberModule.Key_DoNotSerialize)
@@ -89,7 +91,7 @@ namespace AutoBot
                     builder.Register(
                             (c, p) =>
                                 new ScheduledShtrafsCheckService(c.Resolve<IShtrafBizClient>(), c.Resolve<CheckShtrafDialog>()))
-                        .AsSelf().SingleInstance();
+                        .AsSelf().InstancePerDependency();
                     // .InstancePerMatchingLifetimeScope(DialogModule.LifetimeScopeTag);
                 });
 
@@ -109,7 +111,7 @@ namespace AutoBot
                 );
             });
 
-            RegisterRecurrentTasks();
+           // RegisterRecurrentTasks();
         }
 /*
 

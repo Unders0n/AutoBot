@@ -7,6 +7,7 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
 using ShtrafiBLL;
+using StepApp.CommonExtensions.Assembly;
 
 namespace AutoBot.Dialogs
 {
@@ -45,6 +46,16 @@ namespace AutoBot.Dialogs
                    CancellationToken.None);
                 return;
             }
+            if(activity.Text.Trim() == "/version")
+            {
+                var msg = string.Format("Автобот. {0} ({1}). Развернут на {2}", AssemblyHelper.GetAssemblyVersionDate(),
+                    AssemblyHelper.GetAssemblyVersion(),
+                    AssemblyHelper.GetAppHostUri());
+
+                await context.PostAsync(msg);
+                return;
+            }
+
 
             context.Wait(MessageReceivedAsync);
         }

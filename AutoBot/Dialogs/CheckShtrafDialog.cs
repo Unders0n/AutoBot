@@ -319,7 +319,7 @@ namespace AutoBot.Dialogs
                 if (user.DocumentSetsTocheck.FirstOrDefault(check => check.Sts == sts) == null)
                 {
                     PromptDialog.Confirm(context, ResumeAfterAskToSaveSubscribtion,
-                        "Сохранить подписку на новые штрафы для этих документов? Мы оповестим вас только если появится новый штраф ти не будем надоедать сообщениями.");
+                        "Сохранить подписку на новые штрафы для этих документов? Мы оповестим вас только если появится новый штраф и не будем надоедать сообщениями.");
                 }
                 else
                 {

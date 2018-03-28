@@ -1,6 +1,6 @@
 ﻿using Quartz;
 
-namespace BusinessLayer.ScheduledTasks
+namespace AutoBot.ScheduledTasks
 {
     public interface IScheduledShtrafsCheckService : IJob
     {

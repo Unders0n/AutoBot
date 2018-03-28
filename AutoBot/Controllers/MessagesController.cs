@@ -63,6 +63,9 @@ namespace AutoBot
                             activity.GetStateClient().BotState.DeleteStateForUser(activity.ChannelId, activity.From.Id);
                             return new HttpResponseMessage(HttpStatusCode.Accepted);
                         }
+
+                        //tmp
+                       // return new HttpResponseMessage(HttpStatusCode.Accepted);
                         //ignore luis now
                         await Conversation.SendAsync(activity,
                             () => new ExceptionHandlerDialog<object>(_rootDialog, true));

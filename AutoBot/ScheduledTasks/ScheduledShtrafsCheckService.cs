@@ -2,28 +2,20 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoBot.Dialogs;
 using Autofac;
-using StepApp.BotExtensions.ActivityExtensions;
-using StepApp.BotExtensions.DialogExtensions;
-
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Internals;
-using Microsoft.Bot.Builder.FormFlow;
-using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
-using Model;
 using Newtonsoft.Json;
 using NLog;
 using Quartz;
 using ShrafiBiz.Client;
 using StepApp.CommonExtensions.Logger;
 
-namespace BusinessLayer.ScheduledTasks
+namespace AutoBot.ScheduledTasks
 {
     public class ScheduledShtrafsCheckService : IScheduledShtrafsCheckService
     {
@@ -49,7 +41,7 @@ namespace BusinessLayer.ScheduledTasks
         }
 
         //todo: resolve issue with DI
-        public ScheduledShtrafsCheckService(IShtrafBizClient shtrafiBizClient, IDialog<object> dialogToStart)
+        public ScheduledShtrafsCheckService(IShtrafBizClient shtrafiBizClient, CheckShtrafDialog dialogToStart)
         {
             _dialogToStart = dialogToStart;
             _shtrafiBizClient = shtrafiBizClient;
@@ -120,12 +112,13 @@ namespace BusinessLayer.ScheduledTasks
         {
             loggerService.Info("Sending proactive info about shtrafs");
 
-           
+            
 
             foreach (var shtrafiWithDocSet in allShtrafs)
             {
                 loggerService.Info($"Sending proactive info about {shtrafiWithDocSet.DocumentSetToCheck}");
-                await SendProactive(_dialogToStart, shtrafiWithDocSet.User.UserIdTelegramm, "");
+               // var _dialogToStart = Conversation.Container.Resolve<CheckShtrafDialog>();
+                await SendProactive(shtrafiWithDocSet.User.MainConversationReferenceSerialized, _dialogToStart);
                 loggerService.Info($"proactive info about {shtrafiWithDocSet.DocumentSetToCheck} successful");
             }
         }
@@ -156,7 +149,7 @@ namespace BusinessLayer.ScheduledTasks
         }
 
 
-        private static async Task SendProactive(IDialog<object> dialog, string userSlackId, string userSlackName, object[] customParams = null)
+      /*  private static async Task SendProactive(IDialog<object> dialog, string userSlackId, string userSlackName, object[] customParams = null)
         {
             var activity = new Microsoft.Bot.Connector.Activity();
 
@@ -174,7 +167,7 @@ namespace BusinessLayer.ScheduledTasks
 
 
             await fakeMessage.StartConversationWithUserFromDialog(new ExceptionHandlerDialog<object>(dialog, true), null, customParams);
-        }
+        }*/
 
 
         private async Task SendFollowupPoll()
