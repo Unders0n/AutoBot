@@ -20,6 +20,8 @@ namespace AutoBot.Dialogs
     {
         private const int MAX_RETRIES = 3;
 
+        private const int MAX_FINES_TO_SHOW = 10;
+
         public int connectTries;
         public string name;
         public CheckPayResponse pays;
@@ -135,13 +137,27 @@ namespace AutoBot.Dialogs
             {
                 shtrafsAll = pays.L;
                 var i = 1;
+                string shtrafiText = "";
+                
                 foreach (var pay in pays.L)
-                    await context.PostAsync($"{i++}: {pay.Value}");
+                {
+                    // await context.PostAsync($"{i++}: {pay.Value}");
+                    shtrafiText += $"**{i++}**: {pay.Value} <br/><br/> ";
+                    //limit nmb of fines
+                    if (i == MAX_FINES_TO_SHOW + 1)
+                    {
+                        shtrafiText +=
+                            $"Показано {MAX_FINES_TO_SHOW} штрафов из {pays.L.Count}. Оплатите данные штрафы и повторите поиск";
+                        break;
+                    }
+                }
 
-                var totalSumm = pays.L.Sum(pair => Int16.Parse(pair.Value.Sum));
-                var totalSummFeesrv = pays.L.Sum(pair => pair.Value.Feesrv);
+                await context.PostAsync(shtrafiText);
+
+                var totalSumm = pays.L.Take(MAX_FINES_TO_SHOW).Sum(pair => Int16.Parse(pair.Value.Sum));
+                var totalSummFeesrv = pays.L.Take(MAX_FINES_TO_SHOW).Sum(pair => pair.Value.Feesrv);
                 await context.PostAsync(
-                    $"Всего **{pays.L.Count}** штрафов на общую сумму **{totalSumm}**р (+ {totalSummFeesrv}р комиссия)");
+                    $"Всего **{pays.L.Take(MAX_FINES_TO_SHOW).ToList().Count}** штрафов на общую сумму **{totalSumm}**р (+ {totalSummFeesrv}р комиссия)");
 
             }
 
@@ -202,7 +218,7 @@ namespace AutoBot.Dialogs
                 if (_shtrafiUserService.GetDocumentSetToCheck(user, sts) == null)
                 {
                     PromptDialog.Confirm(context, ResumeAfterAskToSaveSubscribtion,
-                        "Сохранить подписку на новые штрафы?");
+                        "Хотите получать уведомления о новых штрафах автоматически?");
                     return;
                 }
 
@@ -343,6 +359,7 @@ namespace AutoBot.Dialogs
                     PromptDialog.Text(context, ResumeAfterNameOfDocSet, "дайте имя этому набору документов , например \"машина Мамы\"");
                 }
             }
+            else context.Done(1);
         }
 
         private async Task ResumeAfterNameOfDocSet(IDialogContext context, IAwaitable<string> result)
@@ -355,7 +372,7 @@ namespace AutoBot.Dialogs
         {
             if (_shtrafiUserService.RegisterDocumentSetToCheck(user, sts, vu, nameOfSet) != null)
             {
-                string txtVu = (vu != null) ?  $", Водительское: {vu}" : "";
+                string txtVu = (vu != "") ?  $", Водительское: {vu}" : "";
                 await context.PostAsync($"Подписка на набор документов: Свидетельство: {sts} {txtVu} успешно сохранена под именем **{nameOfSet}**");
                 context.Done(1);
             }
