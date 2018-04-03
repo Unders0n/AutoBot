@@ -61,8 +61,17 @@ namespace AutoBot.Dialogs
 
         private async Task ResumeAfterStsEntered(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
+            
+           
             var txt = await result;
             sts = txt.Text;
+            //validation
+            if (sts.Length != 10 || !int.TryParse(sts, out int n))
+            {
+                await context.PostAsync($"Неверный формат ввода, убедитесь что вводите 10 символов номера.");
+                context.Wait(ResumeAfterStsEntered);
+                return;
+            }
             //  await context.PostAsync($"Введите номер водительского удостоверения. (Шаг можно пропустить, хотя наличие ВУ повышает шанс на поиск штрафа)");
 
             /*var mes = context.MakeMessage();
@@ -133,6 +142,14 @@ namespace AutoBot.Dialogs
                     context.Done(1);
                 }
             }
+            else if (pays.Err == 15)
+            {
+                await context.PostAsync(
+                    "Неверно введен один из документов для проверки.");
+                await context.PostAsync($"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС");
+                context.Wait(ResumeAfterStsEntered);
+
+            }
             else if (pays.Err == 0)
             {
                 shtrafsAll = pays.L;
@@ -159,38 +176,40 @@ namespace AutoBot.Dialogs
                 await context.PostAsync(
                     $"Всего **{pays.L.Take(MAX_FINES_TO_SHOW).ToList().Count}** штрафов на общую сумму **{totalSumm}**р (+ {totalSummFeesrv}р комиссия)");
 
+
+                //  await context.PostAsync($"введите номера штрафов для оплаты или нажмите кнопку \"оплатить все\"");
+                // PromptDialog.Text(context, Resume, "введите номера штрафов для оплаты или введите \"все\"", null, 3);
+                //  PromptDialog.Choice(context, Resume, new PromptOptions<string>("введите номера штрафов разделяя пробелами или нажмите **оплатить все**", "", null, new List<string>(){ "оплатить все" } ), false);
+                // context.Done(1);
+
+                var mes = context.MakeMessage();
+                mes.Text = "введите номера штрафов, разделяя пробелами, или нажмите **оплатить все**";
+                var buttonPay = new CardAction
+                {
+                    //  Value = "test",
+                    Value = $"оплатить все",
+                    Type = "imBack",
+                    Title = "оплатить все"
+                };
+
+                var buttonNew = new CardAction
+                {
+                    //  Value = "test",
+                    Value = "новый",
+                    Type = "imBack",
+                    Title = "новый поиск"
+                };
+
+
+                var cardForButton = new ThumbnailCard { Buttons = new List<CardAction> { buttonPay, buttonNew } };
+                mes.Attachments.Add(cardForButton.ToAttachment());
+
+                await context.PostAsync(mes);
+                context.Wait(AfterSelectShtrafsToPay);
+
             }
 
 
-            //  await context.PostAsync($"введите номера штрафов для оплаты или нажмите кнопку \"оплатить все\"");
-            // PromptDialog.Text(context, Resume, "введите номера штрафов для оплаты или введите \"все\"", null, 3);
-            //  PromptDialog.Choice(context, Resume, new PromptOptions<string>("введите номера штрафов разделяя пробелами или нажмите **оплатить все**", "", null, new List<string>(){ "оплатить все" } ), false);
-            // context.Done(1);
-
-            var mes = context.MakeMessage();
-            mes.Text = "введите номера штрафов, разделяя пробелами, или нажмите **оплатить все**";
-            var buttonPay = new CardAction
-            {
-                //  Value = "test",
-                Value = $"оплатить все",
-                Type = "imBack",
-                Title = "оплатить все"
-            };
-
-            var buttonNew = new CardAction
-            {
-                //  Value = "test",
-                Value = "новый",
-                Type = "imBack",
-                Title = "новый поиск"
-            };
-
-
-            var cardForButton = new ThumbnailCard {Buttons = new List<CardAction> {buttonPay, buttonNew } };
-            mes.Attachments.Add(cardForButton.ToAttachment());
-
-            await context.PostAsync(mes);
-            context.Wait(AfterSelectShtrafsToPay);
         }
 
         private async Task ResumeAfterVuEntered(IDialogContext context, IAwaitable<IMessageActivity> result)
@@ -199,7 +218,16 @@ namespace AutoBot.Dialogs
             if (txt.Text == "пропустить")
                 vu = "";
             else
+            {
                 vu = txt.Text;
+                //validation
+                if (vu.Length != 10 || !int.TryParse(vu, out int n))
+                {
+                    await context.PostAsync($"Неверный формат ввода, убедитесь что вводите 10 символов номера.");
+                    context.Wait(ResumeAfterVuEntered);
+                    return;
+                }
+            }
 
             var shtrafiCLient = new ShtrafBizClient();
 
