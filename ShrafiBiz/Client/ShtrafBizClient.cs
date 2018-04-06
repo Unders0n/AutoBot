@@ -35,7 +35,7 @@ namespace ShrafiBiz.Client
                 req.AddParameter("hash", hash1);
                 req.AddParameter("type", "10");
                 req.AddParameter("sts", sts);
-                req.AddParameter("vu", vu);
+               if (!string.IsNullOrEmpty(vu)) req.AddParameter("vu", vu);
 
                 // req.Parameters.Add(new Parameter(){Name = });
 

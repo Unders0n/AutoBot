@@ -87,7 +87,7 @@ namespace AutoBot
                             var buttonNew = new CardAction
                             {
                                 //  Value = "test",
-                                Value = "новый",
+                                Value = "новый поиск",
                                 Type = "imBack",
                                 Title = "новый поиск"
                             };

@@ -59,6 +59,11 @@ namespace AutoBot.Dialogs
             context.Wait(ResumeAfterStsEntered);
         }
 
+      /*  private async Task AskForSts(IDialogContext context)
+        {
+           
+        }*/
+
         private async Task ResumeAfterStsEntered(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
             
@@ -90,6 +95,12 @@ namespace AutoBot.Dialogs
             mes.Attachments.Add(cardForButton.ToAttachment());
 
             await context.PostAsync(mes);*/
+            await AskForVu(context);
+            //todo: car recognition by vin or make\model
+        }
+
+        private async Task AskForVu(IDialogContext context)
+        {
             var buttonPay = new CardAction
             {
                 //  Value = "test",
@@ -97,12 +108,12 @@ namespace AutoBot.Dialogs
                 Type = "imBack",
                 Title = "пропустить"
             };
-            await context.PostWithButtonsAsync("Введите номер водительского удостоверения. (Шаг можно пропустить, хотя наличие ВУ повышает шанс на поиск штрафа)", new List<CardAction>(){buttonPay});
-
+            await context.PostWithButtonsAsync(
+                "Введите номер водительского удостоверения. (Шаг можно пропустить, хотя наличие ВУ повышает шанс на поиск штрафа)",
+                new List<CardAction>() {buttonPay});
 
 
             context.Wait(ResumeAfterVuEntered);
-            //todo: car recognition by vin or make\model
         }
 
         private async Task ResumeAfterVuEntered(IDialogContext context, IAwaitable<IMessageActivity> result)
@@ -164,10 +175,18 @@ namespace AutoBot.Dialogs
                     context.Done(1);
                 }
             }
-            else if (pays.Err == 15)
+            else if (pays.Err == -14)
             {
                 await context.PostAsync(
-                    "Неверно введен один из документов для проверки.");
+                    "Неверно введен номер водительского удостоверения.");
+                await AskForVu(context);
+            }
+            else if (pays.Err == -15)
+            {
+                await context.PostAsync(
+                    "Неверно введен номер свидетельства о регистрации.");
+
+                //todo: exctract method, dunno why but when extracted failed with flow
                 await context.PostAsync($"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС");
                 context.Wait(ResumeAfterStsEntered);
 
