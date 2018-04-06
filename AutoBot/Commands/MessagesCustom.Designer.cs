@@ -98,6 +98,7 @@ namespace AutoBot.Commands {
   <string>заново</string>
   <string>сброс</string>
   <string>выход</string>
+<string>искать ещё</string>
 </ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection StartSearchFinesCommands {
             get {

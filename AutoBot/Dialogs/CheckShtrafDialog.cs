@@ -69,7 +69,7 @@ namespace AutoBot.Dialogs
             
            
             var txt = await result;
-            sts = txt.Text;
+            sts = txt.Text.Replace(" ", "");
             //validation
             if (sts.Length != 10)
             {
@@ -123,7 +123,7 @@ namespace AutoBot.Dialogs
                 vu = "";
             else
             {
-                vu = txt.Text;
+                vu = txt.Text.Replace(" ", ""); 
                 //validation
                 if (vu.Length != 10)
                 {
@@ -193,7 +193,7 @@ namespace AutoBot.Dialogs
             }
             else if (pays.Err == 0)
             {
-                shtrafsAll = pays.L;
+                shtrafsAll = pays.L.Take(MAX_FINES_TO_SHOW).ToDictionary(pair => pair.Key, pair => pair.Value); ;
                 var i = 1;
                 string shtrafiText = "";
                 
