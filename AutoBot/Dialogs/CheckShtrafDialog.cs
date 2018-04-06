@@ -66,7 +66,7 @@ namespace AutoBot.Dialogs
             var txt = await result;
             sts = txt.Text;
             //validation
-            if (sts.Length != 10 || !int.TryParse(sts, out int n))
+            if (sts.Length != 10)
             {
                 await context.PostAsync($"Неверный формат ввода, убедитесь что вводите 10 символов номера.");
                 context.Wait(ResumeAfterStsEntered);
@@ -103,6 +103,28 @@ namespace AutoBot.Dialogs
 
             context.Wait(ResumeAfterVuEntered);
             //todo: car recognition by vin or make\model
+        }
+
+        private async Task ResumeAfterVuEntered(IDialogContext context, IAwaitable<IMessageActivity> result)
+        {
+            var txt = await result;
+            if (txt.Text == "пропустить")
+                vu = "";
+            else
+            {
+                vu = txt.Text;
+                //validation
+                if (vu.Length != 10)
+                {
+                    await context.PostAsync($"Неверный формат ввода, убедитесь что вводите 10 символов номера.");
+                    context.Wait(ResumeAfterVuEntered);
+                    return;
+                }
+            }
+
+            var shtrafiCLient = new ShtrafBizClient();
+
+            await TryCheckPay(context, shtrafiCLient);
         }
 
         private async Task TryCheckPay(IDialogContext context, ShtrafBizClient shtrafiCLient)
@@ -212,27 +234,7 @@ namespace AutoBot.Dialogs
 
         }
 
-        private async Task ResumeAfterVuEntered(IDialogContext context, IAwaitable<IMessageActivity> result)
-        {
-            var txt = await result;
-            if (txt.Text == "пропустить")
-                vu = "";
-            else
-            {
-                vu = txt.Text;
-                //validation
-                if (vu.Length != 10 || !int.TryParse(vu, out int n))
-                {
-                    await context.PostAsync($"Неверный формат ввода, убедитесь что вводите 10 символов номера.");
-                    context.Wait(ResumeAfterVuEntered);
-                    return;
-                }
-            }
-
-            var shtrafiCLient = new ShtrafBizClient();
-
-            await TryCheckPay(context, shtrafiCLient);
-        }
+        
 
         private async Task AfterSelectShtrafsToPay(IDialogContext context, IAwaitable<object> result)
         {

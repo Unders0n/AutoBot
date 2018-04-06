@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoBot.Commands;
+using Autofac;
 using StepApp.BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
 using ShtrafiBLL;
@@ -32,21 +35,37 @@ namespace AutoBot.Dialogs
             return Task.CompletedTask;
         }
 
+        //refactor to scorables
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var activity = await result as Activity;
 
-            //1st time
-            if (activity.Text.Contains("/start") || activity.Text.Contains("искать ещё"))
+            if (MessagesCustom.Default.StartSearchFinesCommands.Contains(activity.Text))
             {
-                
                 await context.Forward(new ExceptionHandlerDialog<object>(_checkShtrafDialog, true),
-                   AfterWelcomeAndRegisterDialog,
-                   "",
-                   CancellationToken.None);
+                    AfterWelcomeAndRegisterDialog,
+                    "",
+                    CancellationToken.None);
                 return;
             }
-            if(activity.Text.Trim() == "/version")
+
+            /*if (activity.Text.Contains("/start"))
+            {
+                await context.Forward(new ExceptionHandlerDialog<object>(_checkShtrafDialog, true),
+                    AfterWelcomeAndRegisterDialog,
+                    "",
+                    CancellationToken.None);
+                return;
+            }
+            if (activity.Text.Contains("искать ещё"))
+            {
+                await context.Forward(new ExceptionHandlerDialog<object>(_checkShtrafDialog, true),
+                    AfterWelcomeAndRegisterDialog,
+                    "",
+                    CancellationToken.None);
+            }*/
+
+            if (activity.Text.Trim() == "/version")
             {
                 var msg = string.Format("Автобот. {0} ({1}). Развернут на {2}", AssemblyHelper.GetAssemblyVersionDate(),
                     AssemblyHelper.GetAssemblyVersion(),

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using AutoBot.Commands;
 using AutoBot.Dialogs;
 using Autofac;
 using Microsoft.Bot.Builder.Dialogs;
@@ -18,16 +20,15 @@ namespace AutoBot
     [BotAuthentication]
     public class MessagesController : ApiController
     {
-        private RootLuisDialog _rootLuisDialog;
-        private RootDialog _rootDialog;
-
         private readonly ILifetimeScope scope;
 
         private ILoggerService<ILogger> _loggerService;
+        private RootDialog _rootDialog;
+        private RootLuisDialog _rootLuisDialog;
 
         public MessagesController()
         {
-           // _rootLuisDialog = new RootLuisDialog();
+            // _rootLuisDialog = new RootLuisDialog();
         }
 
         public MessagesController(ILifetimeScope scope)
@@ -36,10 +37,10 @@ namespace AutoBot
         }
 
         /// <summary>
-        /// POST: api/Messages
-        /// Receive a message from a user and reply to it
+        ///     POST: api/Messages
+        ///     Receive a message from a user and reply to it
         /// </summary>
-        public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
+        public async Task<HttpResponseMessage> Post([FromBody] Activity activity)
         {
             try
             {
@@ -48,7 +49,7 @@ namespace AutoBot
                     _loggerService = scope.Resolve<ILoggerService<ILogger>>();
                     _rootLuisDialog = scope.Resolve<RootLuisDialog>();
                     _rootDialog = scope.Resolve<RootDialog>();
-                   
+
 
                     if (activity.Type == ActivityTypes.Message)
                     {
@@ -64,21 +65,33 @@ namespace AutoBot
                             return new HttpResponseMessage(HttpStatusCode.Accepted);
                         }
 
+                        if (MessagesCustom.Default.StartSearchFinesCommands.Contains(activity.Text))
+                        {
+                            //reset stack first
+                            var botData = scope.Resolve<IBotData>();
+                            await botData.LoadAsync(CancellationToken.None);
+                            var _task = scope.Resolve<IDialogTask>();
+                            _task.Reset();
+
+                            await Conversation.SendAsync(activity,
+                                () => new ExceptionHandlerDialog<object>(_rootDialog, true));
+
+                            return new HttpResponseMessage(HttpStatusCode.Accepted);
+                        }
+
                         //tmp
-                       // return new HttpResponseMessage(HttpStatusCode.Accepted);
+                        // return new HttpResponseMessage(HttpStatusCode.Accepted);
                         //ignore luis now
                         await Conversation.SendAsync(activity,
                             () => new ExceptionHandlerDialog<object>(_rootDialog, true));
 
                         /* await Conversation.SendAsync(activity,
-                             () => new ExceptionHandlerDialog<object>(_rootLuisDialog, true));*/
+                                 () => new ExceptionHandlerDialog<object>(_rootLuisDialog, true));*/
                         return new HttpResponseMessage(HttpStatusCode.Accepted);
                         // await Conversation.SendAsync(activity, () => new Dialogs.RootLuisDialog());
                     }
-                    else
-                    {
-                        HandleSystemMessage(activity);
-                    }
+
+                    HandleSystemMessage(activity);
                     var response = Request.CreateResponse(HttpStatusCode.OK);
                     return response;
                 }
@@ -88,7 +101,6 @@ namespace AutoBot
                 _loggerService.Error(e);
                 throw;
             }
-            
         }
 
         private Activity HandleSystemMessage(Activity message)

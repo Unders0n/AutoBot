@@ -179,6 +179,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Commands\MessagesCustom.cs" />
+    <Compile Include="Commands\MessagesCustom.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>MessagesCustom.settings</DependentUpon>
+    </Compile>
     <Compile Include="Controllers\CallbackController.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Dialogs\RootLuisDialog.cs" />
@@ -198,6 +204,10 @@
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
+    <None Include="Commands\MessagesCustom.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>MessagesCustom.Designer.cs</LastGenOutput>
+    </None>
     <None Include="Properties\PublishProfiles\AutoBotStage - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
