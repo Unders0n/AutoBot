@@ -107,10 +107,20 @@ namespace AutoBot.Commands {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string HelpCommands {
+        [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
+<ArrayOfString xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
+  <string>помощь</string>
+  <string>помоги</string>
+  <string>?</string>
+  <string>help</string>
+  <string>/?</string>
+  <string>/help</string>
+  <string>/помощь</string>
+  <string>меню</string>
+</ArrayOfString>")]
+        public global::System.Collections.Specialized.StringCollection HelpCommands {
             get {
-                return ((string)(this["HelpCommands"]));
+                return ((global::System.Collections.Specialized.StringCollection)(this["HelpCommands"]));
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -50,12 +51,13 @@ namespace AutoBot
                     _rootLuisDialog = scope.Resolve<RootLuisDialog>();
                     _rootDialog = scope.Resolve<RootDialog>();
 
+                    var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
 
                     if (activity.Type == ActivityTypes.Message)
                     {
                         if (activity.Text.Trim() == "reset")
                         {
-                            var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                            
                             Activity rep;
 
 
@@ -79,10 +81,27 @@ namespace AutoBot
                             return new HttpResponseMessage(HttpStatusCode.Accepted);
                         }
 
+                        if (MessagesCustom.Default.HelpCommands.Contains(activity.Text))
+                        {
+                            var r = activity.CreateReply("Чтобы начать новый поиск штрафов введите **новый поиск** или нажмите кнопку");
+                            var buttonNew = new CardAction
+                            {
+                                //  Value = "test",
+                                Value = "новый",
+                                Type = "imBack",
+                                Title = "новый поиск"
+                            };
+                            var cardForButton = new ThumbnailCard { Buttons = new List<CardAction> { buttonNew } };
+                            r.Attachments.Add(cardForButton.ToAttachment());
+                            await connector.Conversations.ReplyToActivityAsync(r);
+
+                            return new HttpResponseMessage(HttpStatusCode.Accepted);
+                        }
+
                         //tmp
-                        // return new HttpResponseMessage(HttpStatusCode.Accepted);
-                        //ignore luis now
-                        await Conversation.SendAsync(activity,
+                            // return new HttpResponseMessage(HttpStatusCode.Accepted);
+                            //ignore luis now
+                            await Conversation.SendAsync(activity,
                             () => new ExceptionHandlerDialog<object>(_rootDialog, true));
 
                         /* await Conversation.SendAsync(activity,
