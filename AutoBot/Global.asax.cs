@@ -111,7 +111,7 @@ namespace AutoBot
                 );
             });
 
-           // RegisterRecurrentTasks();
+            RegisterRecurrentTasks();
         }
 /*
 
@@ -236,7 +236,8 @@ namespace AutoBot
                     .WithIdentity("trigger1", "group1")
                     .StartNow()
                     .WithSimpleSchedule(x => x
-                        .WithIntervalInHours(24)
+                       // .WithIntervalInHours(24)
+                        .WithIntervalInMinutes(5)
                         .RepeatForever())
                     .Build();
 

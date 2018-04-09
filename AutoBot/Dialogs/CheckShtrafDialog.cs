@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.ConnectorEx;
-using StepApp.BotExtensions.DialogExtensions;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Connector;
@@ -12,15 +11,19 @@ using Newtonsoft.Json;
 using ShrafiBiz.Client;
 using ShrafiBiz.Model;
 using ShtrafiBLL;
+using StepApp.BotExtensions.DialogExtensions;
 
 namespace AutoBot.Dialogs
 {
     [Serializable]
     public class CheckShtrafDialog : IDialog<object>
     {
+        //  private readonly bool _skipToPay;
         private const int MAX_RETRIES = 3;
 
         private const int MAX_FINES_TO_SHOW = 10;
+        private readonly IShtrafiUserService _shtrafiUserService;
+        private Dictionary<string, Pay> _shtrafsToShow;
 
         public int connectTries;
         public string name;
@@ -32,25 +35,43 @@ namespace AutoBot.Dialogs
 
         public string sts;
         public string surname;
-        public string vu;
-        private IShtrafiUserService _shtrafiUserService;
         private User user;
+        public string vu;
 
-        public CheckShtrafDialog(IShtrafiUserService shtrafiUserService)
+        //todo: refactor to modular instead of skip
+        public CheckShtrafDialog(
+            IShtrafiUserService shtrafiUserService /*, Dictionary<string, Pay> shtrafsToShow = null*/)
         {
+            // _shtrafsToShow = shtrafsToShow;
             SetField.NotNull(out _shtrafiUserService, nameof(_shtrafiUserService), shtrafiUserService);
         }
 
-       /* public CheckShtrafDialog()
+
+        public Dictionary<string, Pay> ShtrafsToShow
+        {
+            get => _shtrafsToShow;
+            set => _shtrafsToShow = value;
+        }
+
+        /* public CheckShtrafDialog()
         {
 
         }*/
 
-        public Task StartAsync(IDialogContext context)
+        public async Task StartAsync(IDialogContext context)
         {
+            //if just need to show shtrafs
+            if (_shtrafsToShow != null)
+            {
+                shtrafsAll = _shtrafsToShow.Take(MAX_FINES_TO_SHOW).ToDictionary(pair => pair.Key, pair => pair.Value);
+                await ShowAllShtrafsAndAllowToPay(context, shtrafsAll);
+                return;
+            }
+
             context.Wait(MessageReceivedAsync);
 
-            return Task.CompletedTask;
+
+            // return Task.CompletedTask;
         }
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
@@ -59,15 +80,13 @@ namespace AutoBot.Dialogs
             context.Wait(ResumeAfterStsEntered);
         }
 
-      /*  private async Task AskForSts(IDialogContext context)
+        /*  private async Task AskForSts(IDialogContext context)
         {
            
         }*/
 
         private async Task ResumeAfterStsEntered(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
-            
-           
             var txt = await result;
             sts = txt.Text.Replace(" ", "");
             //validation
@@ -110,7 +129,7 @@ namespace AutoBot.Dialogs
             };
             await context.PostWithButtonsAsync(
                 "Введите номер водительского удостоверения. (Шаг можно пропустить, хотя наличие ВУ повышает шанс на поиск штрафа)",
-                new List<CardAction>() {buttonPay});
+                new List<CardAction> {buttonPay});
 
 
             context.Wait(ResumeAfterVuEntered);
@@ -120,10 +139,12 @@ namespace AutoBot.Dialogs
         {
             var txt = await result;
             if (txt.Text == "пропустить")
+            {
                 vu = "";
+            }
             else
             {
-                vu = txt.Text.Replace(" ", ""); 
+                vu = txt.Text.Replace(" ", "");
                 //validation
                 if (vu.Length != 10)
                 {
@@ -149,16 +170,13 @@ namespace AutoBot.Dialogs
 
             user = _shtrafiUserService.GetUserAndRegisterIfNeeded(context.Activity.From.Id, dialogRefSerialized);
 
-            
-
 
             //нет штрафов
             if (pays.Err == -4)
             {
                 await context.PostAsync("**Штрафов не найдено.**");
                 await Subscribe(context);
-               // context.Done(1);
-                return;
+                // context.Done(1);
             }
             //проблемы с сервисом, ретраим
             else if (pays.Err == -1)
@@ -189,71 +207,74 @@ namespace AutoBot.Dialogs
                 //todo: exctract method, dunno why but when extracted failed with flow
                 await context.PostAsync($"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС");
                 context.Wait(ResumeAfterStsEntered);
-
             }
             else if (pays.Err == 0)
             {
-                shtrafsAll = pays.L.Take(MAX_FINES_TO_SHOW).ToDictionary(pair => pair.Key, pair => pair.Value); ;
-                var i = 1;
-                string shtrafiText = "";
-                
-                foreach (var pay in pays.L)
-                {
-                    // await context.PostAsync($"{i++}: {pay.Value}");
-                    shtrafiText += $"**{i++}**: {pay.Value} <br/><br/> ";
-                    //limit nmb of fines
-                    if (i == MAX_FINES_TO_SHOW + 1)
-                    {
-                        shtrafiText +=
-                            $"Показано {MAX_FINES_TO_SHOW} штрафов из {pays.L.Count}. Оплатите данные штрафы и повторите поиск";
-                        break;
-                    }
-                }
+               // var shtrafs = pays.L;
+                shtrafsAll = pays.L.Take(MAX_FINES_TO_SHOW).ToDictionary(pair => pair.Key, pair => pair.Value);
+                ;
 
-                await context.PostAsync(shtrafiText);
-
-                var totalSumm = pays.L.Take(MAX_FINES_TO_SHOW).Sum(pair => Int16.Parse(pair.Value.Sum));
-                var totalSummFeesrv = pays.L.Take(MAX_FINES_TO_SHOW).Sum(pair => pair.Value.Feesrv);
-                await context.PostAsync(
-                    $"Всего **{pays.L.Take(MAX_FINES_TO_SHOW).ToList().Count}** штрафов на общую сумму **{totalSumm}**р (+ {totalSummFeesrv}р комиссия)");
-
-
-                //  await context.PostAsync($"введите номера штрафов для оплаты или нажмите кнопку \"оплатить все\"");
-                // PromptDialog.Text(context, Resume, "введите номера штрафов для оплаты или введите \"все\"", null, 3);
-                //  PromptDialog.Choice(context, Resume, new PromptOptions<string>("введите номера штрафов разделяя пробелами или нажмите **оплатить все**", "", null, new List<string>(){ "оплатить все" } ), false);
-                // context.Done(1);
-
-                var mes = context.MakeMessage();
-                mes.Text = "введите номера штрафов, разделяя пробелами, или нажмите **оплатить все**";
-                var buttonPay = new CardAction
-                {
-                    //  Value = "test",
-                    Value = $"оплатить все",
-                    Type = "imBack",
-                    Title = "оплатить все"
-                };
-
-                var buttonNew = new CardAction
-                {
-                    //  Value = "test",
-                    Value = "новый",
-                    Type = "imBack",
-                    Title = "новый поиск"
-                };
-
-
-                var cardForButton = new ThumbnailCard { Buttons = new List<CardAction> { buttonPay, buttonNew } };
-                mes.Attachments.Add(cardForButton.ToAttachment());
-
-                await context.PostAsync(mes);
-                context.Wait(AfterSelectShtrafsToPay);
-
+                await ShowAllShtrafsAndAllowToPay(context, shtrafsAll);
             }
-
-
         }
 
-        
+        private async Task ShowAllShtrafsAndAllowToPay(IDialogContext context, Dictionary<string, Pay> shtrafs)
+        {
+            var i = 1;
+            var shtrafiText = "";
+
+            foreach (var pay in shtrafs)
+            {
+                // await context.PostAsync($"{i++}: {pay.Value}");
+                shtrafiText += $"**{i++}**: {pay.Value} <br/><br/> ";
+                //limit nmb of fines
+                if (i == MAX_FINES_TO_SHOW + 1)
+                {
+                    shtrafiText +=
+                        $"Показано {MAX_FINES_TO_SHOW} штрафов из {shtrafsAll.Count}. Оплатите данные штрафы и повторите поиск";
+                    break;
+                }
+            }
+
+            await context.PostAsync(shtrafiText);
+
+            var totalSumm = shtrafsAll.Take(MAX_FINES_TO_SHOW).Sum(pair => short.Parse(pair.Value.Sum));
+            var totalSummFeesrv = shtrafsAll.Take(MAX_FINES_TO_SHOW).Sum(pair => pair.Value.Feesrv);
+            await context.PostAsync(
+                $"Всего **{shtrafsAll.Take(MAX_FINES_TO_SHOW).ToList().Count}** штрафов на общую сумму **{totalSumm}**р (+ {totalSummFeesrv}р комиссия)");
+
+
+            //  await context.PostAsync($"введите номера штрафов для оплаты или нажмите кнопку \"оплатить все\"");
+            // PromptDialog.Text(context, Resume, "введите номера штрафов для оплаты или введите \"все\"", null, 3);
+            //  PromptDialog.Choice(context, Resume, new PromptOptions<string>("введите номера штрафов разделяя пробелами или нажмите **оплатить все**", "", null, new List<string>(){ "оплатить все" } ), false);
+            // context.Done(1);
+
+            var mes = context.MakeMessage();
+            mes.Text = "введите номера штрафов, разделяя пробелами, или нажмите **оплатить все**";
+            var buttonPay = new CardAction
+            {
+                //  Value = "test",
+                Value = $"оплатить все",
+                Type = "imBack",
+                Title = "оплатить все"
+            };
+
+            var buttonNew = new CardAction
+            {
+                //  Value = "test",
+                Value = "новый",
+                Type = "imBack",
+                Title = "новый поиск"
+            };
+
+
+            var cardForButton = new ThumbnailCard {Buttons = new List<CardAction> {buttonPay, buttonNew}};
+            mes.Attachments.Add(cardForButton.ToAttachment());
+
+            await context.PostAsync(mes);
+            context.Wait(AfterSelectShtrafsToPay);
+        }
+
 
         private async Task AfterSelectShtrafsToPay(IDialogContext context, IAwaitable<object> result)
         {
@@ -289,7 +310,7 @@ namespace AutoBot.Dialogs
                 //shtrafsAll
             }
 
-            var totalSumm = shtrafsWantToPay.Sum(pair => Int16.Parse(pair.Value.Sum));
+            var totalSumm = shtrafsWantToPay.Sum(pair => short.Parse(pair.Value.Sum));
             var totalSummFeesrv = shtrafsWantToPay.Sum(pair => pair.Value.Feesrv);
 
             await context.PostAsync(
@@ -318,20 +339,21 @@ namespace AutoBot.Dialogs
                     Title = "Оплатить"
                 };
                 await context.PostWithButtonsAsync($"оплата {shtrafsWantToPay.Count} штрафов",
-                    new List<CardAction>() {buttonPay});
-                await context.PostAsync($"Нажимая кнопку «Оплатить» вы принимаете условия Соглашения об использовании сервиса: https://shtraf.biz/doc_sogl.pdf");
+                    new List<CardAction> {buttonPay});
+                await context.PostAsync(
+                    $"Нажимая кнопку «Оплатить» вы принимаете условия Соглашения об использовании сервиса: https://shtraf.biz/doc_sogl.pdf");
                 // await context.PostAsync($"Для оплаты перейдите по ссылке: {resp.Urlpay}");
 
                 //todo: abstract out of telegram id
                 await Subscribe(context);
-
             }
             else
             {
-                await context.PostAsync($"При оплате произошла ошибка. Мы уже в курсе. Приносим свои извинения. Повторите поиск.");
+                await context.PostAsync(
+                    $"При оплате произошла ошибка. Мы уже в курсе. Приносим свои извинения. Повторите поиск.");
             }
 
-           
+
             /*var button = new CardAction
             {
                 //  Value = "test",
@@ -344,12 +366,12 @@ namespace AutoBot.Dialogs
 
         private async Task Subscribe(IDialogContext context)
         {
-           // var userId = context.Activity.From.Id;
+            // var userId = context.Activity.From.Id;
 
             user = _shtrafiUserService.GetUserByMessengerId(user.UserIdTelegramm);
             if (user == null)
             {
-              //  var registeredUser = _shtrafiUserService.RegisterUserAfterFirstPay(userId, name, surname, sts, vu);
+                //  var registeredUser = _shtrafiUserService.RegisterUserAfterFirstPay(userId, name, surname, sts, vu);
 
                 var subscribedDocSet = _shtrafiUserService.RegisterDocumentSetToCheck(user, sts, vu, name);
 
@@ -375,7 +397,8 @@ namespace AutoBot.Dialogs
                     Title = "новый поиск"
                 };
                 await context.PostWithButtonsAsync(
-                    "Кстати, мы подписали вас на уведомления о новых штрафах. Сообщение будет приходить только если новый штраф найден. Но вы можете отменить подписку, если хотите.", new List<CardAction>(){buttonOk, buttonCancel, buttonNew });
+                    "Кстати, мы подписали вас на уведомления о новых штрафах. Сообщение будет приходить только если новый штраф найден. Но вы можете отменить подписку, если хотите.",
+                    new List<CardAction> {buttonOk, buttonCancel, buttonNew});
 
                 context.Wait(ResumeAfterSubscription);
             }
@@ -389,25 +412,25 @@ namespace AutoBot.Dialogs
                 else
                 {
                     await context.PostAsync(
-                    "У вас уже есть подписка об уведомлении по этому набору документов. Если хотите отменить введите **отменить подписку**");
-                context.Done(1);
+                        "У вас уже есть подписка об уведомлении по этому набору документов. Если хотите отменить введите **отменить подписку**");
+                    context.Done(1);
                 }
-                
             }
         }
 
         private async Task ResumeAfterAskToSaveSubscribtion(IDialogContext context, IAwaitable<bool> result)
         {
             if (await result)
-            {
-                //if its first set of docs
-                if (user.DocumentSetsTocheck == null || user?.DocumentSetsTocheck.Count == 0) await SaveSubscriptionOfDocSet(context, "основной");
+                if (user.DocumentSetsTocheck == null || user?.DocumentSetsTocheck.Count == 0)
+                {
+                    await SaveSubscriptionOfDocSet(context, "основной");
+                }
                 else
                 {
                     name = "";
-                    PromptDialog.Text(context, ResumeAfterNameOfDocSet, "дайте имя этому набору документов , например \"машина Мамы\"");
+                    PromptDialog.Text(context, ResumeAfterNameOfDocSet,
+                        "дайте имя этому набору документов , например \"машина Мамы\"");
                 }
-            }
             else context.Done(1);
         }
 
@@ -421,8 +444,9 @@ namespace AutoBot.Dialogs
         {
             if (_shtrafiUserService.RegisterDocumentSetToCheck(user, sts, vu, nameOfSet) != null)
             {
-                string txtVu = (vu != "") ?  $", Водительское: {vu}" : "";
-                await context.PostAsync($"Подписка на набор документов: Свидетельство: {sts} {txtVu} успешно сохранена под именем **{nameOfSet}**");
+                var txtVu = vu != "" ? $", Водительское: {vu}" : "";
+                await context.PostAsync(
+                    $"Подписка на набор документов: Свидетельство: {sts} {txtVu} успешно сохранена под именем **{nameOfSet}**");
                 context.Done(1);
             }
             else
@@ -439,11 +463,8 @@ namespace AutoBot.Dialogs
             {
                 //todo: add cancelling of subscription
             }
-            if (res.Text == "новый")
-            {
-                context.Done(1);
-                //todo: add cancelling of subscription
-            }
+
+            if (res.Text == "новый") context.Done(1);
         }
     }
 }

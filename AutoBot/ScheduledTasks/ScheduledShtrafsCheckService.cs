@@ -29,7 +29,7 @@ namespace AutoBot.ScheduledTasks
 
         private const int MAX_RETRIES = 3;
         public int connectTries;
-        private IDialog<object> _dialogToStart;
+        private CheckShtrafDialog _dialogToStart;
 
         // private GlobalSettingsService _globalSettingsService;
         // private WelcomePollDialog _welcomePollDialog;
@@ -117,7 +117,8 @@ namespace AutoBot.ScheduledTasks
             foreach (var shtrafiWithDocSet in allShtrafs)
             {
                 loggerService.Info($"Sending proactive info about {shtrafiWithDocSet.DocumentSetToCheck}");
-               // var _dialogToStart = Conversation.Container.Resolve<CheckShtrafDialog>();
+                // var _dialogToStart = Conversation.Container.Resolve<CheckShtrafDialog>();
+                _dialogToStart.ShtrafsToShow = shtrafiWithDocSet.Shtrafs;
                 await SendProactive(shtrafiWithDocSet.User.MainConversationReferenceSerialized, _dialogToStart);
                 loggerService.Info($"proactive info about {shtrafiWithDocSet.DocumentSetToCheck} successful");
             }

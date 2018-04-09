@@ -18,6 +18,35 @@ namespace TestConsole
     {
         static void Main(string[] args)
         {
+            int age = 120;
+            string ageBlock = "";
+
+            switch (age)
+            {
+                case 50:
+                    ageBlock = "the big five-oh";
+                    break;
+                case var testAge when (new List<int>()
+                    { 80, 81, 82, 83, 84, 85, 86, 87, 88, 89 }).Contains(testAge):
+                    ageBlock = "octogenarian";
+                    break;
+                case var testAge when ((testAge >= 90) & (testAge <= 99)):
+                    ageBlock = "nonagenarian";
+                    break;
+                
+                case var testAge when (testAge >= 100):
+                    ageBlock = "centenarian";
+                    break;
+                case var testAge when (testAge >= 110):
+                    ageBlock = "centenarian +";
+                    break;
+                default:
+                    ageBlock = "just old";
+                    break;
+            }
+
+
+            return;
             var dbContext = new  AutoBotContext();
             var dbContext2 = new AutoBotContext();
 
