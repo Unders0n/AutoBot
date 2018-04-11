@@ -419,7 +419,7 @@ namespace AutoBot.Dialogs
             else
             {
                 //if from subscription
-                if (_shtrafsToShow == null)
+                if (_shtrafsToShow != null)
                 {
                     var txt = "Если вдруг хотите отменить подписку по этому набору документов, нажмите соответствующую кнопку:";
 
@@ -502,13 +502,20 @@ namespace AutoBot.Dialogs
             var res = await result;
             if (res.Text == "отменить")
             {
-                PromptDialog.Confirm(context, async (dialogContext, awaitable) =>
-                {
-                    if ( await awaitable) _shtrafiUserService.
-                });
+                PromptDialog.Confirm(context, AfterCancelSubscription, $"Вы действительно желаете отменить подписку **{_shtrafsToShow.DocumentSetToCheck.Name}** по документам: {_shtrafsToShow.DocumentSetToCheck}?");
             }
 
             if (res.Text == "новый") context.Done(1);
+        }
+
+        private async Task AfterCancelSubscription(IDialogContext context, IAwaitable<bool> result)
+        {
+            if (await result)
+            {
+                _shtrafiUserService.DisableScheduleForDocumentSet(user, sts);
+               await context.PostAsync("Подписка успешно отменена");
+            }
+            context.Done(1);
         }
     }
 }

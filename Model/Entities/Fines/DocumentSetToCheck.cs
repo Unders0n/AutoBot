@@ -28,7 +28,9 @@ namespace Model.Entities.Fines
 
         public override string ToString()
         {
-            return $"{User}'s shtraf {Name}";
+            var txtVu = Vu != "" ? $", Водительское: {Vu}" : "";
+            var txt =  $"Подписка на набор документов: Свидетельство: {Sts} {txtVu}";
+            return txt;
         }
     }
 }
