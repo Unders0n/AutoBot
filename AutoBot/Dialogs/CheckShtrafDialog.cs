@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoBot.ScheduledTasks;
 using Microsoft.Bot.Builder.ConnectorEx;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Internals.Fibers;
@@ -23,7 +24,8 @@ namespace AutoBot.Dialogs
 
         private const int MAX_FINES_TO_SHOW = 10;
         private readonly IShtrafiUserService _shtrafiUserService;
-        private Dictionary<string, Pay> _shtrafsToShow;
+        private UsersShtrafiWithDocSet _shtrafsToShow;
+        private string _shtrafsToShowSubscriptionName;
 
         public int connectTries;
         public string name;
@@ -47,11 +49,12 @@ namespace AutoBot.Dialogs
         }
 
 
-        public Dictionary<string, Pay> ShtrafsToShow
+        public UsersShtrafiWithDocSet ShtrafsToShow
         {
             get => _shtrafsToShow;
             set => _shtrafsToShow = value;
         }
+
 
         /* public CheckShtrafDialog()
         {
@@ -63,8 +66,15 @@ namespace AutoBot.Dialogs
             //if just need to show shtrafs
             if (_shtrafsToShow != null)
             {
-                shtrafsAll = _shtrafsToShow.Take(MAX_FINES_TO_SHOW).ToDictionary(pair => pair.Key, pair => pair.Value);
-                await ShowAllShtrafsAndAllowToPay(context, shtrafsAll);
+                //set needed vars
+                user = _shtrafsToShow.User;
+
+                shtrafsAll = _shtrafsToShow.Shtrafs;
+                await context.PostAsync(
+                    $"Внимание! У вас обнаружены новые штрафы по подписке **{_shtrafsToShow.DocumentSetToCheck.Name}**");
+                var shtrafsToShowRightNow = _shtrafsToShow.Shtrafs.Take(MAX_FINES_TO_SHOW)
+                    .ToDictionary(pair => pair.Key, pair => pair.Value);
+                await ShowAllShtrafsAndAllowToPay(context, shtrafsToShowRightNow);
                 return;
             }
 
@@ -210,7 +220,7 @@ namespace AutoBot.Dialogs
             }
             else if (pays.Err == 0)
             {
-               // var shtrafs = pays.L;
+                // var shtrafs = pays.L;
                 shtrafsAll = pays.L.Take(MAX_FINES_TO_SHOW).ToDictionary(pair => pair.Key, pair => pair.Value);
                 ;
 
@@ -299,7 +309,8 @@ namespace AutoBot.Dialogs
 
             if (txt == "оплатить все")
             {
-                shtrafsWantToPay = shtrafsAll;
+                shtrafsWantToPay = shtrafsAll.Take(MAX_FINES_TO_SHOW)
+                    .ToDictionary(pair => pair.Key, pair => pair.Value);
             }
             else
             {
@@ -404,7 +415,8 @@ namespace AutoBot.Dialogs
             }
             else
             {
-                if (user.DocumentSetsTocheck.FirstOrDefault(check => check.Sts == sts) == null)
+                //if from subscription
+                if (user.DocumentSetsTocheck.FirstOrDefault(check => check.Sts == sts) == null && _shtrafsToShow == null)
                 {
                     PromptDialog.Confirm(context, ResumeAfterAskToSaveSubscribtion,
                         "Сохранить подписку на новые штрафы для этих документов? Мы оповестим вас только если появится новый штраф и не будем надоедать сообщениями.");
@@ -412,9 +424,10 @@ namespace AutoBot.Dialogs
                 else
                 {
                     await context.PostAsync(
-                        "У вас уже есть подписка об уведомлении по этому набору документов. Если хотите отменить введите **отменить подписку**");
+                        "У вас уже есть подписка об уведомлении по этому набору документов. Если хотите отменить введите **отменить подписку** или вызовите этот пункт из меню");
                     context.Done(1);
                 }
+                
             }
         }
 

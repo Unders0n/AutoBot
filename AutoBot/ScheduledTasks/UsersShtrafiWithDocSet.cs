@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Model.Entities;
 using Model.Entities.Fines;
 using ShrafiBiz.Model;
 
 namespace AutoBot.ScheduledTasks
 {
+    [Serializable]
     public class UsersShtrafiWithDocSet
     {
         public UsersShtrafiWithDocSet(User user, DocumentSetToCheck documentSetToCheck, Dictionary<string, Pay> shtrafs)

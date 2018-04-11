@@ -118,7 +118,8 @@ namespace AutoBot.ScheduledTasks
             {
                 loggerService.Info($"Sending proactive info about {shtrafiWithDocSet.DocumentSetToCheck}");
                 // var _dialogToStart = Conversation.Container.Resolve<CheckShtrafDialog>();
-                _dialogToStart.ShtrafsToShow = shtrafiWithDocSet.Shtrafs;
+                _dialogToStart.ShtrafsToShow = shtrafiWithDocSet;
+              //  _dialogToStart.ShtrafsToShowSubscriptionName = 
                 await SendProactive(shtrafiWithDocSet.User.MainConversationReferenceSerialized, _dialogToStart);
                 loggerService.Info($"proactive info about {shtrafiWithDocSet.DocumentSetToCheck} successful");
             }
