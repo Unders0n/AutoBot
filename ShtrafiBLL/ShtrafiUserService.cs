@@ -114,6 +114,26 @@ namespace ShtrafiBLL
             // new Exception("Подписка для этого пользователя с данным");
         }
 
+        public void DisableScheduleForDocumentSet(User user, string sts)
+        {
+            using (_autoBotContext)
+            {
+                var set = GetDocumentSetToCheck(user, sts);
+                set.ScheduleCheck = false;
+                _autoBotContext.SaveChanges();
+            }
+        }
+
+        public void EnableScheduleForDocumentSet(User user, string sts)
+        {
+            using (_autoBotContext)
+            {
+                var set = GetDocumentSetToCheck(user, sts);
+                set.ScheduleCheck = true;
+                _autoBotContext.SaveChanges();
+            }
+        }
+
         public DocumentSetToCheck GetDocumentSetToCheck(User user, string sts)
         {
             var userInContext = GetUserById(user.Id);

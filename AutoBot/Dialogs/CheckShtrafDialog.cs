@@ -68,6 +68,9 @@ namespace AutoBot.Dialogs
             {
                 //set needed vars
                 user = _shtrafsToShow.User;
+                sts = _shtrafsToShow.DocumentSetToCheck.Sts;
+                vu = _shtrafsToShow.DocumentSetToCheck.Vu;
+
 
                 shtrafsAll = _shtrafsToShow.Shtrafs;
                 await context.PostAsync(
@@ -416,18 +419,43 @@ namespace AutoBot.Dialogs
             else
             {
                 //if from subscription
-                if (user.DocumentSetsTocheck.FirstOrDefault(check => check.Sts == sts) == null && _shtrafsToShow == null)
+                if (_shtrafsToShow == null)
                 {
-                    PromptDialog.Confirm(context, ResumeAfterAskToSaveSubscribtion,
-                        "Сохранить подписку на новые штрафы для этих документов? Мы оповестим вас только если появится новый штраф и не будем надоедать сообщениями.");
+                    var txt = "Если вдруг хотите отменить подписку по этому набору документов, нажмите соответствующую кнопку:";
+
+                    var buttonCancel = new CardAction
+                    {
+                        //  Value = "test",
+                        Value = "отменить",
+                        Type = "imBack",
+                        Title = "отменить подписку"
+                    };
+                    var buttonNew = new CardAction
+                    {
+                        //  Value = "test",
+                        Value = "новый",
+                        Type = "imBack",
+                        Title = "новый поиск"
+                    };
+                    await context.PostWithButtonsAsync(txt, new List<CardAction> { buttonNew, buttonCancel });
+                    context.Wait(ResumeAfterSubscription);
+
                 }
                 else
                 {
-                    await context.PostAsync(
-                        "У вас уже есть подписка об уведомлении по этому набору документов. Если хотите отменить введите **отменить подписку** или вызовите этот пункт из меню");
-                    context.Done(1);
+                    
+                    if (user.DocumentSetsTocheck.FirstOrDefault(check => check.Sts == sts ) == null)
+                    {
+                        PromptDialog.Confirm(context, ResumeAfterAskToSaveSubscribtion,
+                            "Сохранить подписку на новые штрафы для этих документов? Мы оповестим вас только если появится новый штраф и не будем надоедать сообщениями.");
+                    }
+                    else
+                    {
+                        await context.PostAsync(
+                            "У вас уже есть подписка об уведомлении по этому набору документов. Если хотите отменить, введите **отменить подписку** или вызовите этот пункт из меню");
+                        context.Done(1);
+                    }
                 }
-                
             }
         }
 
@@ -474,7 +502,10 @@ namespace AutoBot.Dialogs
             var res = await result;
             if (res.Text == "отменить")
             {
-                //todo: add cancelling of subscription
+                PromptDialog.Confirm(context, async (dialogContext, awaitable) =>
+                {
+                    if ( await awaitable) _shtrafiUserService.
+                });
             }
 
             if (res.Text == "новый") context.Done(1);

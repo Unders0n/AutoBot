@@ -12,6 +12,9 @@ namespace ShtrafiBLL
 
         DocumentSetToCheck RegisterDocumentSetToCheck(User user, string sts, string vu, string name);
 
+        void DisableScheduleForDocumentSet(User user, string sts);
+        void EnableScheduleForDocumentSet(User user, string sts); 
+
         DocumentSetToCheck GetDocumentSetToCheck(User user, string sts);
 
        User GetUserById(int id);
