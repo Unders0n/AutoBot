@@ -224,10 +224,9 @@ namespace AutoBot.Dialogs
             else if (pays.Err == 0)
             {
                 // var shtrafs = pays.L;
-                shtrafsAll = pays.L.Take(MAX_FINES_TO_SHOW).ToDictionary(pair => pair.Key, pair => pair.Value);
-                ;
+                shtrafsAll = pays.L.ToDictionary(pair => pair.Key, pair => pair.Value);
 
-                await ShowAllShtrafsAndAllowToPay(context, shtrafsAll);
+                await ShowAllShtrafsAndAllowToPay(context, shtrafsAll.Take(MAX_FINES_TO_SHOW).ToDictionary(pair => pair.Key, pair => pair.Value));
             }
         }
 
@@ -239,7 +238,7 @@ namespace AutoBot.Dialogs
             foreach (var pay in shtrafs)
             {
                 // await context.PostAsync($"{i++}: {pay.Value}");
-                shtrafiText += $"**{i++}**: {pay.Value} <br/><br/> ";
+                shtrafiText += $"**{i++}**: {pay.Value} <br/><br/>";
                 //limit nmb of fines
                 if (i == MAX_FINES_TO_SHOW + 1)
                 {
@@ -275,7 +274,7 @@ namespace AutoBot.Dialogs
             var buttonNew = new CardAction
             {
                 //  Value = "test",
-                Value = "новый",
+                Value = "новый поиск",
                 Type = "imBack",
                 Title = "новый поиск"
             };
@@ -296,7 +295,7 @@ namespace AutoBot.Dialogs
 
             var txt = res.Text;
 
-            if (res.Text == "новый")
+            if (res.Text == "новый поиск")
             {
                 if (_shtrafiUserService.GetDocumentSetToCheck(user, sts) == null)
                 {
@@ -406,7 +405,7 @@ namespace AutoBot.Dialogs
                 var buttonNew = new CardAction
                 {
                     //  Value = "test",
-                    Value = "новый",
+                    Value = "новый поиск",
                     Type = "imBack",
                     Title = "новый поиск"
                 };
@@ -433,7 +432,7 @@ namespace AutoBot.Dialogs
                     var buttonNew = new CardAction
                     {
                         //  Value = "test",
-                        Value = "новый",
+                        Value = "новый поиск",
                         Type = "imBack",
                         Title = "новый поиск"
                     };
@@ -505,7 +504,7 @@ namespace AutoBot.Dialogs
                 PromptDialog.Confirm(context, AfterCancelSubscription, $"Вы действительно желаете отменить подписку **{_shtrafsToShow.DocumentSetToCheck.Name}** по документам: {_shtrafsToShow.DocumentSetToCheck}?");
             }
 
-            if (res.Text == "новый") context.Done(1);
+            if (res.Text == "новый поиск") context.Done(1);
         }
 
         private async Task AfterCancelSubscription(IDialogContext context, IAwaitable<bool> result)

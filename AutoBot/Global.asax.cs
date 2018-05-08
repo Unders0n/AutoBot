@@ -237,7 +237,7 @@ namespace AutoBot
                     .StartNow()
                     .WithSimpleSchedule(x => x
                        // .WithIntervalInHours(24)
-                        .WithIntervalInMinutes(3)
+                        .WithIntervalInMinutes(5)
                         .RepeatForever())
                     .Build();
 
