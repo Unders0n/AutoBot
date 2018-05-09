@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using AutoBot.ScheduledTasks;
 using Microsoft.Bot.Builder.ConnectorEx;
 using Microsoft.Bot.Builder.Dialogs;
@@ -89,8 +90,19 @@ namespace AutoBot.Dialogs
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
-            await context.PostAsync($"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС");
-            context.Wait(ResumeAfterStsEntered);
+          //  await context.PostAsync($"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС");
+            var img = new Attachment()
+            {
+                ContentType = "image/png",
+                Name = "img",
+                ContentUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + "/Images/sts.png"
+            };
+           var act = context.MakeMessage();
+            act.Text = $"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС";
+            act.Attachments  = new List<Attachment>() { img } ;
+       // var act = new Activity() {Attachments = new List<Attachment>(){ img } };
+           await context.PostAsync(act);
+           context.Wait(ResumeAfterStsEntered);
         }
 
         /*  private async Task AskForSts(IDialogContext context)
@@ -133,6 +145,13 @@ namespace AutoBot.Dialogs
 
         private async Task AskForVu(IDialogContext context)
         {
+            var img = new Attachment()
+            {
+                ContentType = "image/png",
+                Name = "img",
+                ContentUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + "/Images/vu.png"
+            };
+
             var buttonPay = new CardAction
             {
                 //  Value = "test",
@@ -142,7 +161,7 @@ namespace AutoBot.Dialogs
             };
             await context.PostWithButtonsAsync(
                 "Введите номер водительского удостоверения. (Шаг можно пропустить, хотя наличие ВУ повышает шанс на поиск штрафа)",
-                new List<CardAction> {buttonPay});
+                new List<CardAction> {buttonPay}, new List<Attachment>{img});
 
 
             context.Wait(ResumeAfterVuEntered);

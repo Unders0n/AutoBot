@@ -173,6 +173,8 @@
   <ItemGroup>
     <Content Include="default.htm" />
     <Content Include="Global.asax" />
+    <Content Include="Images\sts.png" />
+    <Content Include="Images\vu.png" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
@@ -186,6 +188,7 @@
       <DependentUpon>MessagesCustom.settings</DependentUpon>
     </Compile>
     <Compile Include="Controllers\CallbackController.cs" />
+    <Compile Include="Controllers\ImagesController.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Dialogs\RootLuisDialog.cs" />
     <Compile Include="Dialogs\CheckShtrafDialog.cs" />
