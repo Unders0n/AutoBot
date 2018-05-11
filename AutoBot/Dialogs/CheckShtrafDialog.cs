@@ -95,7 +95,7 @@ namespace AutoBot.Dialogs
             {
                 ContentType = "image/png",
                 Name = "img",
-                ContentUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + "/Images/sts.png"
+                ContentUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + "/Images/sts_min.png"
             };
            var act = context.MakeMessage();
             act.Text = $"Чтобы проверить штрафы, введите номер свидетельства о регистрации ТС";
@@ -149,7 +149,7 @@ namespace AutoBot.Dialogs
             {
                 ContentType = "image/png",
                 Name = "img",
-                ContentUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + "/Images/vu.png"
+                ContentUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority) + "/Images/vu_min.png"
             };
 
             var buttonPay = new CardAction

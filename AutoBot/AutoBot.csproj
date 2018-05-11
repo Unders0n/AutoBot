@@ -174,7 +174,9 @@
     <Content Include="default.htm" />
     <Content Include="Global.asax" />
     <Content Include="Images\sts.png" />
+    <Content Include="Images\sts_min.png" />
     <Content Include="Images\vu.png" />
+    <Content Include="Images\vu_min.png" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>

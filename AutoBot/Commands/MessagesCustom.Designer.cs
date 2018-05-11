@@ -12,7 +12,7 @@ namespace AutoBot.Commands {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.5.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.6.0.0")]
     internal sealed partial class MessagesCustom : global::System.Configuration.ApplicationSettingsBase {
         
         private static MessagesCustom defaultInstance = ((MessagesCustom)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new MessagesCustom())));
@@ -98,7 +98,7 @@ namespace AutoBot.Commands {
   <string>заново</string>
   <string>сброс</string>
   <string>выход</string>
-<string>искать ещё</string>
+  <string>искать ещё</string>
 </ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection StartSearchFinesCommands {
             get {

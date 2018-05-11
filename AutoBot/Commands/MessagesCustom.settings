@@ -34,6 +34,7 @@
   &lt;string&gt;заново&lt;/string&gt;
   &lt;string&gt;сброс&lt;/string&gt;
   &lt;string&gt;выход&lt;/string&gt;
+  &lt;string&gt;искать ещё&lt;/string&gt;
 &lt;/ArrayOfString&gt;</Value>
     </Setting>
     <Setting Name="HelpCommands" Type="System.Collections.Specialized.StringCollection" Scope="Application">

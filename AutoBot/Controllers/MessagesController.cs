@@ -24,6 +24,7 @@ namespace AutoBot
         private readonly ILifetimeScope scope;
 
         private ILoggerService<ILogger> _loggerService;
+        private CheckShtrafDialog _checkShtrafDialog;
         private RootDialog _rootDialog;
         private RootLuisDialog _rootLuisDialog;
 
@@ -48,6 +49,7 @@ namespace AutoBot
                 using (var scope = DialogModule.BeginLifetimeScope(this.scope, activity))
                 {
                     _loggerService = scope.Resolve<ILoggerService<ILogger>>();
+                    _checkShtrafDialog = scope.Resolve<CheckShtrafDialog>();
                     _rootLuisDialog = scope.Resolve<RootLuisDialog>();
                     _rootDialog = scope.Resolve<RootDialog>();
 
@@ -110,6 +112,29 @@ namespace AutoBot
                         // await Conversation.SendAsync(activity, () => new Dialogs.RootLuisDialog());
                     }
 
+                    else if (activity.Type == ActivityTypes.ConversationUpdate)
+                    {
+
+                        //start if just joined
+                        if (activity.MembersAdded.Count == 1)
+                        {
+                           // var act = activity.AsMessageActivity();
+                            /* using (var scope = DialogModule.BeginLifetimeScope(this.scope, act))
+                             {
+                                var _rootDialog = scope.Resolve<RootDialog>();*/
+
+
+
+                            await Conversation.SendAsync(activity,
+                                () => new ExceptionHandlerDialog<object>(_checkShtrafDialog, true));
+                            return new HttpResponseMessage(HttpStatusCode.Accepted);
+                            /*}*/
+                        }
+                        // Handle conversation state changes, like members being added and removed
+                        // Use Activity.MembersAdded and Activity.MembersRemoved and Activity.Action for info
+                        // Not available in all channels
+                    }
+
                     HandleSystemMessage(activity);
                     var response = Request.CreateResponse(HttpStatusCode.OK);
                     return response;
@@ -122,19 +147,31 @@ namespace AutoBot
             }
         }
 
-        private Activity HandleSystemMessage(Activity message)
+        private async  Task<Activity> HandleSystemMessage(Activity message)
         {
             if (message.Type == ActivityTypes.DeleteUserData)
             {
                 // Implement user deletion here
                 // If we handle user deletion, return a real message
             }
-            else if (message.Type == ActivityTypes.ConversationUpdate)
+         /*   else if (message.Type == ActivityTypes.ConversationUpdate)
             {
+
+                //start if just joined
+                if (message.MembersAdded.Count == 1)
+                {
+                    var act = message.AsMessageActivity();
+                   /* using (var scope = DialogModule.BeginLifetimeScope(this.scope, act))
+                    {
+                       var _rootDialog = scope.Resolve<RootDialog>();#1#
+                        await Conversation.SendAsync(act,
+                            () => new ExceptionHandlerDialog<object>(_rootDialog, true));
+                    /*}#1#
+                }
                 // Handle conversation state changes, like members being added and removed
                 // Use Activity.MembersAdded and Activity.MembersRemoved and Activity.Action for info
                 // Not available in all channels
-            }
+            }*/
             else if (message.Type == ActivityTypes.ContactRelationUpdate)
             {
                 // Handle add/remove from contact lists

@@ -26,20 +26,24 @@ namespace AutoBot.Dialogs
             SetField.NotNull(out _checkShtrafDialog, nameof(_checkShtrafDialog), checkShtrafDialog);
         }
 
-        public Task StartAsync(IDialogContext context)
+        public async Task StartAsync(IDialogContext context)
         {
           //  welcomeAndRegisterDialog = new WelcomeAndRegisterCarDialog();
            // checkShtrafDialog = new CheckShtrafDialog();
             context.Wait(MessageReceivedAsync);
 
-            return Task.CompletedTask;
+           // return Task.CompletedTask;
+
+
         }
 
         //refactor to scorables
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var activity = await result as Activity;
-
+            
+            
+            
             if (MessagesCustom.Default.StartSearchFinesCommands.Contains(activity.Text))
             {
                 await context.Forward(new ExceptionHandlerDialog<object>(_checkShtrafDialog, true),
