@@ -111,7 +111,7 @@ namespace AutoBot
                 );
             });
 
-            RegisterRecurrentTasks();
+           // RegisterRecurrentTasks();
         }
 /*
 

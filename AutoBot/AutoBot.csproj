@@ -213,6 +213,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>MessagesCustom.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Properties\PublishProfiles\AutoBotRelease - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\AutoBotStage - Web Deploy.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
